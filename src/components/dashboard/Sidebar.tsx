@@ -1,3 +1,7 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -23,7 +27,7 @@ import type { ComponentType } from "react";
 type NavItem = {
   label: string;
   icon: ComponentType<{ className?: string }>;
-  active?: boolean;
+  href?: string;
 };
 
 type NavSection = {
@@ -36,9 +40,9 @@ const sections: NavSection[] = [
     title: "PRINCIPAL",
     items: [
       { label: "Tableau de bord", icon: LayoutDashboard },
-      { label: "Leads / Commandes", icon: ShoppingCart, active: true },
+      { label: "Leads / Commandes", icon: ShoppingCart, href: "/" },
       { label: "Imports Excel", icon: FileSpreadsheet },
-      { label: "Confirmation", icon: PhoneCall },
+      { label: "Confirmation", icon: PhoneCall, href: "/confirmation" },
       { label: "Perf. Agents", icon: Activity },
     ],
   },
@@ -76,6 +80,8 @@ type SidebarProps = {
 };
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
+  const pathname = usePathname();
+
   return (
     <>
       {open && (
@@ -116,18 +122,25 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             <ul className="space-y-0.5">
               {section.items.map((item) => {
                 const Icon = item.icon;
+                const active = item.href === pathname;
+                const className = `flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] transition-colors ${
+                  active
+                    ? "bg-blue-600 text-white font-medium"
+                    : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
+                }`;
                 return (
                   <li key={item.label}>
-                    <div
-                      className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] transition-colors ${
-                        item.active
-                          ? "bg-blue-600 text-white font-medium"
-                          : "text-slate-400 hover:bg-white/5 hover:text-slate-200 cursor-default"
-                      }`}
-                    >
-                      <Icon className="h-[17px] w-[17px] shrink-0" />
-                      <span>{item.label}</span>
-                    </div>
+                    {item.href ? (
+                      <Link href={item.href} onClick={onClose} className={className}>
+                        <Icon className="h-[17px] w-[17px] shrink-0" />
+                        <span>{item.label}</span>
+                      </Link>
+                    ) : (
+                      <div className={`${className} cursor-default`}>
+                        <Icon className="h-[17px] w-[17px] shrink-0" />
+                        <span>{item.label}</span>
+                      </div>
+                    )}
                   </li>
                 );
               })}
