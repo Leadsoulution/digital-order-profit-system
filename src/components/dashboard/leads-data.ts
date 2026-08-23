@@ -1,3 +1,12 @@
+export type LeadStatus =
+  | "Nouveau"
+  | "Assigne"
+  | "Confirme"
+  | "Rappel"
+  | "Pas de reponse"
+  | "Annule"
+  | "A revoir";
+
 export type Lead = {
   id: string;
   reference: string;
@@ -7,7 +16,7 @@ export type Lead = {
   source: "Excel import" | "whatsapp" | "Agent Manual" | "nouveau";
   assignedTo: string;
   amount: string;
-  status: string;
+  status: LeadStatus;
   shipping: string;
   date: string;
 };
@@ -35,7 +44,7 @@ export const leads: Lead[] = [
     source: "Excel import",
     assignedTo: "soufiane imil",
     amount: "200 MAD",
-    status: "Assigne",
+    status: "Nouveau",
     shipping: "En attente",
     date: "19 aout 2026, 21:59",
   },
@@ -48,7 +57,7 @@ export const leads: Lead[] = [
     source: "Excel import",
     assignedTo: "soufiane imil",
     amount: "200 MAD",
-    status: "Assigne",
+    status: "Nouveau",
     shipping: "En attente",
     date: "19 aout 2026, 21:59",
   },
@@ -61,7 +70,7 @@ export const leads: Lead[] = [
     source: "whatsapp",
     assignedTo: "Youssef Idrissi",
     amount: "249 MAD",
-    status: "Assigne",
+    status: "Confirme",
     shipping: "En attente",
     date: "21 aout 2026, 22:39",
   },
@@ -74,7 +83,7 @@ export const leads: Lead[] = [
     source: "whatsapp",
     assignedTo: "Fatima Zahra",
     amount: "279 MAD",
-    status: "Assigne",
+    status: "Rappel",
     shipping: "En attente",
     date: "20 aout 2026, 19:14",
   },
@@ -87,7 +96,7 @@ export const leads: Lead[] = [
     source: "Agent Manual",
     assignedTo: "Fatima Zahra",
     amount: "837 MAD",
-    status: "Assigne",
+    status: "Annule",
     shipping: "En attente",
     date: "23 juil. 2026, 22:39",
   },
@@ -100,22 +109,29 @@ export const leads: Lead[] = [
     source: "nouveau",
     assignedTo: "Fatima Zahra",
     amount: "558 MAD",
-    status: "Assigne",
+    status: "A revoir",
     shipping: "En attente",
     date: "28 juil. 2026, 08:40",
   },
 ];
 
-export const tabs = [
-  { label: "Tous", count: 48745 },
-  { label: "Nouveaux", count: 1728 },
-  { label: "Assignes", count: 4598 },
-  { label: "Confirmes", count: 31327 },
-  { label: "Rappels", count: 1512 },
-  { label: "Pas de rep.", count: 0 },
-  { label: "Annules", count: 1843 },
-  { label: "A revoir", count: 1584 },
+const tabDefinitions: { label: string; status: LeadStatus | null }[] = [
+  { label: "Tous", status: null },
+  { label: "Nouveaux", status: "Nouveau" },
+  { label: "Assignes", status: "Assigne" },
+  { label: "Confirmes", status: "Confirme" },
+  { label: "Rappels", status: "Rappel" },
+  { label: "Pas de rep.", status: "Pas de reponse" },
+  { label: "Annules", status: "Annule" },
+  { label: "A revoir", status: "A revoir" },
 ];
+
+export const tabs = tabDefinitions.map((tab) => ({
+  ...tab,
+  count: tab.status
+    ? leads.filter((lead) => lead.status === tab.status).length
+    : leads.length,
+}));
 
 export const dateRanges = [
   "Tout",
@@ -132,6 +148,16 @@ export const sourceBadgeStyles: Record<Lead["source"], string> = {
   whatsapp: "bg-pink-50 text-pink-600",
   "Agent Manual": "bg-gray-100 text-gray-600",
   nouveau: "bg-emerald-50 text-emerald-600",
+};
+
+export const statusBadgeStyles: Record<LeadStatus, string> = {
+  Nouveau: "bg-sky-50 text-sky-600",
+  Assigne: "bg-blue-50 text-blue-600",
+  Confirme: "bg-green-50 text-green-700",
+  Rappel: "bg-orange-50 text-orange-600",
+  "Pas de reponse": "bg-gray-100 text-gray-500",
+  Annule: "bg-red-50 text-red-600",
+  "A revoir": "bg-purple-50 text-purple-600",
 };
 
 export const agents = [
@@ -165,3 +191,35 @@ export const expeditionStatuses = [
   "Retourne",
   "Refuse",
 ];
+
+export const sourceOptions = [
+  "Excel import",
+  "whatsapp",
+  "Agent Manual",
+  "nouveau",
+];
+
+export const productNames = [
+  "SAC LO",
+  "Diffuseur Atlas Zen",
+  "Serum Derma Glow",
+  "Powerbank MagSafe Atlas",
+];
+
+export const attentionLevels = ["Urgent", "Normal", "Faible"];
+
+export const reminderDueOptions = [
+  "En retard",
+  "Aujourd'hui",
+  "Demain",
+  "Cette semaine",
+];
+
+export const amountRanges = [
+  "0 - 200 MAD",
+  "200 - 500 MAD",
+  "500 - 1000 MAD",
+  "1000 MAD et plus",
+];
+
+export const notesOptions = ["Avec notes", "Sans notes"];

@@ -63,8 +63,8 @@ export default function CreateCommandeModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-10">
-      <div className="w-full max-w-lg rounded-xl bg-white shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 sm:px-4 sm:py-10">
+      <div className="flex h-full w-full flex-col bg-white shadow-2xl sm:h-auto sm:max-w-lg sm:rounded-xl">
         <div className="flex items-start justify-between border-b border-gray-100 px-5 py-4">
           <div className="flex items-start gap-2.5">
             <ShoppingCart className="mt-0.5 h-4 w-4 text-gray-700" />
@@ -87,13 +87,13 @@ export default function CreateCommandeModal({
           </button>
         </div>
 
-        <div className="max-h-[70vh] space-y-5 overflow-y-auto px-5 py-4">
+        <div className="flex-1 space-y-5 overflow-y-auto px-5 py-4 sm:max-h-[70vh] sm:flex-none">
           <div>
             <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-gray-500">
               <User className="h-3 w-3" />
               NOM CLIENT
             </p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-[12.5px] text-gray-600">
                   Nom client
@@ -118,7 +118,7 @@ export default function CreateCommandeModal({
           </div>
 
           <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2.5">
                 <Phone className="h-4 w-4 text-orange-500" />
                 <div>
@@ -133,7 +133,7 @@ export default function CreateCommandeModal({
               <button
                 type="button"
                 onClick={() => setSecondaryPhoneEnabled((v) => !v)}
-                className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-[12.5px] font-medium text-gray-700 hover:bg-gray-50"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 sm:w-auto"
               >
                 {secondaryPhoneEnabled ? "Desactiver" : "Activer"}
               </button>
@@ -217,7 +217,7 @@ export default function CreateCommandeModal({
               <Tag className="h-3 w-3" />
               DETAILS DE LA COMMANDE
             </p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-[12.5px] text-gray-600">
                   Reference (optionnelle)
@@ -395,14 +395,14 @@ export default function CreateCommandeModal({
           </button>
         </div>
 
-        <div className="flex justify-end gap-2.5 border-t border-gray-100 px-5 py-4">
+        <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 px-5 py-4 sm:flex-row sm:justify-end">
           <button
             onClick={onClose}
-            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50"
+            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50 sm:w-auto"
           >
             Annuler
           </button>
-          <button className="rounded-lg bg-gray-900 px-4 py-2 text-[13px] font-medium text-white hover:bg-gray-800">
+          <button className="w-full rounded-lg bg-gray-900 px-4 py-2 text-[13px] font-medium text-white hover:bg-gray-800 sm:w-auto">
             Creer commande
           </button>
         </div>

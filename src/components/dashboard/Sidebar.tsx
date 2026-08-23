@@ -16,6 +16,7 @@ import {
   UserCog,
   BarChart2,
   LogOut,
+  X,
 } from "lucide-react";
 import type { ComponentType } from "react";
 
@@ -69,17 +70,41 @@ const sections: NavSection[] = [
   },
 ];
 
-export default function Sidebar() {
+type SidebarProps = {
+  open: boolean;
+  onClose: () => void;
+};
+
+export default function Sidebar({ open, onClose }: SidebarProps) {
   return (
-    <aside className="flex h-full w-[248px] shrink-0 flex-col bg-[#0B1120] text-slate-300">
-      <div className="flex items-center gap-2.5 px-5 py-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-          <ShoppingCart className="h-4 w-4 text-white" />
+    <>
+      {open && (
+        <div
+          onClick={onClose}
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+        />
+      )}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex h-full w-[248px] shrink-0 flex-col bg-[#0B1120] text-slate-300 transition-transform duration-200 ease-out lg:static lg:z-auto lg:translate-x-0 ${
+          open ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+      <div className="flex items-center justify-between gap-2.5 px-5 py-5">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
+            <ShoppingCart className="h-4 w-4 text-white" />
+          </div>
+          <div className="leading-tight">
+            <p className="text-[15px] font-semibold text-white">Lead2Door</p>
+            <p className="text-[11px] text-slate-500">From Lead to Door</p>
+          </div>
         </div>
-        <div className="leading-tight">
-          <p className="text-[15px] font-semibold text-white">Lead2Door</p>
-          <p className="text-[11px] text-slate-500">From Lead to Door</p>
-        </div>
+        <button
+          onClick={onClose}
+          className="rounded-md p-1 text-slate-400 hover:bg-white/5 hover:text-slate-200 lg:hidden"
+        >
+          <X className="h-4 w-4" />
+        </button>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 pb-4">
@@ -117,6 +142,7 @@ export default function Sidebar() {
           <span>Deconnexion</span>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

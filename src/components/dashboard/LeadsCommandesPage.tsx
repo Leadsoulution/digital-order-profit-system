@@ -17,39 +17,56 @@ import {
   Clock,
   Wallet,
   FileText,
-  ChevronDown,
+  Inbox,
+  Eye,
+  Phone,
+  Copy,
+  Trash2,
 } from "lucide-react";
 import {
   leads,
   tabs,
   dateRanges,
   sourceBadgeStyles,
+  statusBadgeStyles,
   agents,
   expeditionStatuses,
+  sourceOptions,
+  productNames,
+  attentionLevels,
+  reminderDueOptions,
+  amountRanges,
+  notesOptions,
 } from "./leads-data";
 import RowActionsMenu from "./RowActionsMenu";
 import CreateCommandeModal from "./CreateCommandeModal";
 import SelectDropdown from "./SelectDropdown";
-
-const staticFilterFields = [
-  { label: "Tous Source", icon: Tag },
-  { label: "Tous Produit", icon: Package },
-  { label: "Tous Statut livraison personnalise", icon: Truck },
-  { label: "Tous Attention", icon: AlertTriangle },
-  { label: "Tous Echeance rappel", icon: Clock },
-  { label: "Tous Tranche montant", icon: Wallet },
-  { label: "Tous Notes", icon: FileText },
-];
 
 export default function LeadsCommandesPage() {
   const [activeTab, setActiveTab] = useState("Tous");
   const [activeRange, setActiveRange] = useState("Maximum");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const activeTabDef = tabs.find((t) => t.label === activeTab) ?? tabs[0];
+  const filteredLeads = activeTabDef.status
+    ? leads.filter((lead) => lead.status === activeTabDef.status)
+    : leads;
+
+  const query = searchQuery.trim().toLowerCase();
+  const visibleLeads = query
+    ? filteredLeads.filter(
+        (lead) =>
+          lead.reference.toLowerCase().includes(query) ||
+          lead.client.toLowerCase().includes(query) ||
+          lead.phone.includes(query)
+      )
+    : filteredLeads;
 
   return (
-    <div className="flex-1 overflow-y-auto bg-gray-50 px-6 py-5">
-      <div className="mb-5 flex items-start justify-between">
+    <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-4 lg:px-6 lg:py-5">
+      <div className="mb-5 hidden items-start justify-between lg:flex">
         <div className="flex items-start gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-100">
             <ShoppingCart className="h-4 w-4 text-gray-600" />
@@ -81,7 +98,7 @@ export default function LeadsCommandesPage() {
         </div>
       </div>
 
-      <div className="mb-4 flex items-center gap-6 border-b border-gray-200">
+      <div className="mb-4 flex items-center gap-5 overflow-x-auto border-b border-gray-200 lg:gap-6 lg:overflow-visible">
         {tabs.map((tab) => (
           <button
             key={tab.label}
@@ -97,11 +114,13 @@ export default function LeadsCommandesPage() {
         ))}
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-2.5">
-        <div className="relative min-w-[280px] flex-1">
+      <div className="mb-4 flex flex-col gap-2.5 lg:flex-row lg:flex-wrap lg:items-center">
+        <div className="relative w-full lg:min-w-[280px] lg:flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Rechercher par reference, client ou telephone."
             className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-[13px] text-gray-700 placeholder:text-gray-400 focus:border-blue-400 focus:outline-none"
           />
@@ -109,13 +128,13 @@ export default function LeadsCommandesPage() {
 
         <button
           onClick={() => setFiltersOpen((v) => !v)}
-          className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50"
+          className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50 lg:w-auto lg:justify-start"
         >
           <SlidersHorizontal className="h-3.5 w-3.5" />
           Filtres
         </button>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto lg:flex-wrap lg:overflow-visible">
           {dateRanges.map((range) => (
             <button
               key={range}
@@ -134,7 +153,7 @@ export default function LeadsCommandesPage() {
       </div>
 
       {filtersOpen && (
-        <div className="mb-4 grid grid-cols-4 gap-3">
+        <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
           <SelectDropdown
             icon={Truck}
             panelTitle="Expedition"
@@ -149,26 +168,64 @@ export default function LeadsCommandesPage() {
             multi
             searchable
           />
-
-          {staticFilterFields.map((field) => {
-            const Icon = field.icon;
-            return (
-              <button
-                key={field.label}
-                className="flex items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-[12.5px] text-gray-600 hover:bg-gray-50"
-              >
-                <span className="flex min-w-0 items-center gap-2">
-                  <Icon className="h-3.5 w-3.5 shrink-0 text-gray-400" />
-                  <span className="truncate">{field.label}</span>
-                </span>
-                <ChevronDown className="h-3.5 w-3.5 shrink-0 text-gray-400" />
-              </button>
-            );
-          })}
+          <SelectDropdown
+            icon={Tag}
+            panelTitle="Source"
+            pinnedLabel="Tous Source"
+            options={sourceOptions}
+          />
+          <SelectDropdown
+            icon={Package}
+            panelTitle="Produit"
+            pinnedLabel="Tous Produit"
+            options={productNames}
+            searchable
+            searchPlaceholder="Rechercher un produit..."
+          />
+          <SelectDropdown
+            icon={Truck}
+            panelTitle="Statut livraison personnalise"
+            pinnedLabel="Tous Statut livraison personnalise"
+            options={expeditionStatuses}
+          />
+          <SelectDropdown
+            icon={AlertTriangle}
+            panelTitle="Attention"
+            pinnedLabel="Tous Attention"
+            options={attentionLevels}
+          />
+          <SelectDropdown
+            icon={Clock}
+            panelTitle="Echeance rappel"
+            pinnedLabel="Tous Echeance rappel"
+            options={reminderDueOptions}
+          />
+          <SelectDropdown
+            icon={Wallet}
+            panelTitle="Tranche montant"
+            pinnedLabel="Tous Tranche montant"
+            options={amountRanges}
+          />
+          <SelectDropdown
+            icon={FileText}
+            panelTitle="Notes"
+            pinnedLabel="Tous Notes"
+            options={notesOptions}
+          />
         </div>
       )}
 
-      <div className="rounded-xl border border-gray-200 bg-white">
+      <div className="mb-3 flex items-center justify-between lg:hidden">
+        <p className="text-[13px] text-gray-500">
+          {visibleLeads.length.toLocaleString("fr-FR")} resultats
+        </p>
+        <label className="flex items-center gap-1.5 text-[12.5px] text-gray-600">
+          <input type="checkbox" className="h-4 w-4 rounded border-gray-300" />
+          Selectionner tout
+        </label>
+      </div>
+
+      <div className="hidden rounded-xl border border-gray-200 bg-white lg:block">
         <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
           <div className="flex items-center gap-2.5">
             <ShoppingCart className="h-4 w-4 text-gray-600" />
@@ -176,7 +233,9 @@ export default function LeadsCommandesPage() {
               <p className="text-[14px] font-semibold text-gray-900">
                 Leads &amp; Commandes
               </p>
-              <p className="text-[12.5px] text-gray-500">48745 resultats</p>
+              <p className="text-[12.5px] text-gray-500">
+                {activeTabDef.count.toLocaleString("fr-FR")} resultats
+              </p>
             </div>
           </div>
           <input type="checkbox" className="h-4 w-4 rounded border-gray-300" />
@@ -205,7 +264,19 @@ export default function LeadsCommandesPage() {
               </tr>
             </thead>
             <tbody>
-              {leads.map((lead) => (
+              {visibleLeads.length === 0 && (
+                <tr>
+                  <td colSpan={11} className="px-5 py-12 text-center">
+                    <div className="flex flex-col items-center gap-2 text-gray-400">
+                      <Inbox className="h-6 w-6" />
+                      <p className="text-[13px]">
+                        Aucune commande dans cette categorie.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+              {visibleLeads.map((lead) => (
                 <tr
                   key={lead.id}
                   className="border-b border-gray-50 text-[13px] text-gray-700 last:border-0 hover:bg-gray-50/60"
@@ -242,7 +313,9 @@ export default function LeadsCommandesPage() {
                     {lead.amount}
                   </td>
                   <td className="px-3 py-3">
-                    <span className="rounded-md bg-blue-50 px-2 py-1 text-[12px] font-medium text-blue-600">
+                    <span
+                      className={`rounded-md px-2 py-1 text-[12px] font-medium ${statusBadgeStyles[lead.status]}`}
+                    >
                       {lead.status}
                     </span>
                   </td>
@@ -263,6 +336,90 @@ export default function LeadsCommandesPage() {
           </table>
         </div>
       </div>
+
+      <div className="space-y-3 lg:hidden">
+        {visibleLeads.length === 0 && (
+          <div className="flex flex-col items-center gap-2 rounded-xl border border-gray-200 bg-white py-12 text-gray-400">
+            <Inbox className="h-6 w-6" />
+            <p className="text-[13px]">Aucune commande dans cette categorie.</p>
+          </div>
+        )}
+        {visibleLeads.map((lead) => (
+          <div
+            key={lead.id}
+            className="rounded-xl border border-gray-200 bg-white p-3.5"
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={`rounded-md px-2 py-1 text-[11.5px] font-medium ${sourceBadgeStyles[lead.source]}`}
+                >
+                  {lead.source}
+                </span>
+                <span
+                  className={`rounded-md px-2 py-1 text-[11.5px] font-medium ${statusBadgeStyles[lead.status]}`}
+                >
+                  {lead.status}
+                </span>
+              </div>
+              <RowActionsMenu />
+            </div>
+
+            <div className="mb-3 flex gap-3">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-[10px] font-medium text-gray-400">
+                {lead.productLabel}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[14px] font-semibold text-gray-900">
+                  {lead.client}
+                </p>
+                <p className="text-[12.5px] text-gray-400">{lead.phone}</p>
+                <p className="mt-1 flex items-center gap-1 text-[12.5px] text-gray-500">
+                  <User className="h-3 w-3" />
+                  {lead.assignedTo}
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-2 flex items-center justify-between">
+              <span className="rounded-md bg-gray-100 px-2 py-1 text-[11.5px] font-medium text-gray-500">
+                {lead.shipping}
+              </span>
+              <span className="text-[16px] font-semibold text-gray-900">
+                {lead.amount}
+              </span>
+            </div>
+
+            <p className="mb-3 text-[12px] text-gray-400">{lead.date}</p>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button className="flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-2 text-[12.5px] font-medium text-gray-700 hover:bg-gray-50">
+                <Eye className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">Voir details</span>
+              </button>
+              <button className="flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-2 text-[12.5px] font-medium text-gray-700 hover:bg-gray-50">
+                <Phone className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">Appeler</span>
+              </button>
+              <button className="flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-2 text-[12.5px] font-medium text-gray-700 hover:bg-gray-50">
+                <Copy className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">Copier numero</span>
+              </button>
+              <button className="flex items-center justify-center gap-1.5 rounded-lg border border-red-200 py-2 text-[12.5px] font-medium text-red-600 hover:bg-red-50">
+                <Trash2 className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">Supprimer commande</span>
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <button
+        onClick={() => setModalOpen(true)}
+        className="fixed bottom-5 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-gray-900 text-white shadow-lg hover:bg-gray-800 lg:hidden"
+      >
+        <Plus className="h-6 w-6" />
+      </button>
 
       {modalOpen && (
         <CreateCommandeModal onClose={() => setModalOpen(false)} />
