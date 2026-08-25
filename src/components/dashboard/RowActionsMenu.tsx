@@ -13,21 +13,27 @@ import {
   Trash2,
 } from "lucide-react";
 
-const menuGroups = [
-  [
-    { label: "Voir details", icon: Eye },
-    { label: "Modifier les details", icon: Pencil },
-    { label: "Copier la reference", icon: Copy },
-    { label: "Appeler", icon: Phone },
-    { label: "Copier le contact", icon: Contact },
-  ],
-  [
-    { label: "Assigner", icon: UserPlus },
-    { label: "Changer statut", icon: RefreshCw },
-  ],
-];
+type RowActionsMenuProps = {
+  onViewDetails: () => void;
+  onEdit: () => void;
+  onCopyReference: () => void;
+  onCall: () => void;
+  onCopyContact: () => void;
+  onAssign: () => void;
+  onChangeStatus: () => void;
+  onDelete: () => void;
+};
 
-export default function RowActionsMenu() {
+export default function RowActionsMenu({
+  onViewDetails,
+  onEdit,
+  onCopyReference,
+  onCall,
+  onCopyContact,
+  onAssign,
+  onChangeStatus,
+  onDelete,
+}: RowActionsMenuProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -40,6 +46,25 @@ export default function RowActionsMenu() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const menuGroups = [
+    [
+      { label: "Voir details", icon: Eye, onClick: onViewDetails },
+      { label: "Modifier les details", icon: Pencil, onClick: onEdit },
+      { label: "Copier la reference", icon: Copy, onClick: onCopyReference },
+      { label: "Appeler", icon: Phone, onClick: onCall },
+      { label: "Copier le contact", icon: Contact, onClick: onCopyContact },
+    ],
+    [
+      { label: "Assigner", icon: UserPlus, onClick: onAssign },
+      { label: "Changer statut", icon: RefreshCw, onClick: onChangeStatus },
+    ],
+  ];
+
+  function runAndClose(action: () => void) {
+    action();
+    setOpen(false);
+  }
 
   return (
     <div className="relative" ref={ref}>
@@ -62,6 +87,7 @@ export default function RowActionsMenu() {
                 return (
                   <button
                     key={item.label}
+                    onClick={() => runAndClose(item.onClick)}
                     className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-[13px] text-gray-700 hover:bg-gray-50"
                   >
                     <Icon className="h-3.5 w-3.5 text-gray-400" />
@@ -72,7 +98,10 @@ export default function RowActionsMenu() {
             </div>
           ))}
           <div className="border-t border-gray-100 pt-1">
-            <button className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-[13px] text-red-600 hover:bg-red-50">
+            <button
+              onClick={() => runAndClose(onDelete)}
+              className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-[13px] text-red-600 hover:bg-red-50"
+            >
               <Trash2 className="h-3.5 w-3.5" />
               Supprimer commande
             </button>

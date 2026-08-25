@@ -1,16 +1,20 @@
 export type LeadStatus =
   | "Nouveau"
   | "Assigne"
+  | "En cours"
   | "Confirme"
   | "Rappel"
   | "Pas de reponse"
+  | "Numero incorrect"
   | "Annule"
+  | "Duplique"
   | "A revoir";
 
 export type Lead = {
   id: string;
   reference: string;
   productLabel: string;
+  productName: string;
   client: string;
   phone: string;
   source: "Excel import" | "whatsapp" | "Agent Manual" | "nouveau";
@@ -19,6 +23,9 @@ export type Lead = {
   status: LeadStatus;
   shipping: string;
   date: string;
+  ville?: string;
+  quartier?: string;
+  adresse?: string;
 };
 
 export const leads: Lead[] = [
@@ -26,6 +33,7 @@ export const leads: Lead[] = [
     id: "1",
     reference: "spc-1003",
     productLabel: "SAC",
+    productName: "SAC LO",
     client: "soufiane imil",
     phone: "0660164362",
     source: "Excel import",
@@ -34,11 +42,15 @@ export const leads: Lead[] = [
     status: "Assigne",
     shipping: "En attente",
     date: "19 aout 2026, 21:59",
+    ville: "Casablanca",
+    quartier: "Maarif",
+    adresse: "11 Rue Example",
   },
   {
     id: "2",
     reference: "spc-1002",
     productLabel: "DIF",
+    productName: "Diffuseur Atlas Zen",
     client: "soufiane imil",
     phone: "0660164361",
     source: "Excel import",
@@ -52,6 +64,7 @@ export const leads: Lead[] = [
     id: "3",
     reference: "spc-1001",
     productLabel: "DIF",
+    productName: "Diffuseur Atlas Zen",
     client: "soufiane imil",
     phone: "0660164360",
     source: "Excel import",
@@ -65,6 +78,7 @@ export const leads: Lead[] = [
     id: "4",
     reference: "MO-E8HQ7-0811",
     productLabel: "BOIS",
+    productName: "Sac Cuir Marrakech",
     client: "ayoub",
     phone: "0622161711",
     source: "whatsapp",
@@ -78,6 +92,7 @@ export const leads: Lead[] = [
     id: "5",
     reference: "MO-MX7NC-0802",
     productLabel: "BOIS",
+    productName: "Bracelet Atlas Silver",
     client: "Yassin",
     phone: "0630053131",
     source: "whatsapp",
@@ -91,6 +106,7 @@ export const leads: Lead[] = [
     id: "6",
     reference: "MO-DWZW8-0728",
     productLabel: "SAC",
+    productName: "SAC LO",
     client: "achraf",
     phone: "0666686869",
     source: "Agent Manual",
@@ -104,6 +120,7 @@ export const leads: Lead[] = [
     id: "7",
     reference: "MO-EES7K-0728",
     productLabel: "SAC",
+    productName: "Serum Derma Glow",
     client: "samba",
     phone: "0623145234",
     source: "nouveau",
@@ -153,10 +170,13 @@ export const sourceBadgeStyles: Record<Lead["source"], string> = {
 export const statusBadgeStyles: Record<LeadStatus, string> = {
   Nouveau: "bg-sky-50 text-sky-600",
   Assigne: "bg-blue-50 text-blue-600",
+  "En cours": "bg-indigo-50 text-indigo-600",
   Confirme: "bg-green-50 text-green-700",
   Rappel: "bg-orange-50 text-orange-600",
   "Pas de reponse": "bg-gray-100 text-gray-500",
+  "Numero incorrect": "bg-red-100 text-red-700",
   Annule: "bg-red-50 text-red-600",
+  Duplique: "bg-yellow-50 text-yellow-700",
   "A revoir": "bg-purple-50 text-purple-600",
 };
 
@@ -193,10 +213,27 @@ export const expeditionStatuses = [
 ];
 
 export const sourceOptions = [
+  "agent_manual",
   "Excel import",
-  "whatsapp",
-  "Agent Manual",
+  "Google Sheets",
+  "Landing page",
+  "Mobile app",
   "nouveau",
+  "Shopify",
+  "whatsapp",
+  "WooCommerce",
+];
+
+export const leadStatusOptions = [
+  "Aucun changement",
+  "En cours",
+  "Confirme",
+  "Rappel",
+  "Pas de reponse",
+  "Numero incorrect",
+  "Annule",
+  "Duplique",
+  "A revoir",
 ];
 
 export const productNames = [

@@ -22,9 +22,14 @@ import {
   Phone,
   Copy,
   Trash2,
+  UserPlus,
+  RefreshCw,
+  X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
-  leads,
+  leads as initialLeads,
   tabs,
   dateRanges,
   sourceBadgeStyles,
@@ -37,22 +42,44 @@ import {
   reminderDueOptions,
   amountRanges,
   notesOptions,
+  type Lead,
+  type LeadStatus,
 } from "./leads-data";
 import RowActionsMenu from "./RowActionsMenu";
 import CreateCommandeModal from "./CreateCommandeModal";
+import OrderDetailsModal from "./OrderDetailsModal";
+import EditOrderModal from "./EditOrderModal";
+import ChangeStatusModal from "./ChangeStatusModal";
+import AssignModal from "./AssignModal";
 import SelectDropdown from "./SelectDropdown";
 
+type ModalState =
+  | { type: "create" }
+  | { type: "details"; lead: Lead }
+  | { type: "edit"; lead: Lead }
+  | { type: "status"; leadIds: string[] }
+  | { type: "assign"; leadIds: string[] }
+  | null;
+
 export default function LeadsCommandesPage() {
+  const [leadsState, setLeadsState] = useState<Lead[]>(initialLeads);
   const [activeTab, setActiveTab] = useState("Tous");
   const [activeRange, setActiveRange] = useState("Maximum");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [modal, setModal] = useState<ModalState>(null);
 
-  const activeTabDef = tabs.find((t) => t.label === activeTab) ?? tabs[0];
+  const dynamicTabs = tabs.map((tab) => ({
+    ...tab,
+    count: tab.status
+      ? leadsState.filter((lead) => lead.status === tab.status).length
+      : leadsState.length,
+  }));
+  const activeTabDef = dynamicTabs.find((t) => t.label === activeTab) ?? dynamicTabs[0];
   const filteredLeads = activeTabDef.status
-    ? leads.filter((lead) => lead.status === activeTabDef.status)
-    : leads;
+    ? leadsState.filter((lead) => lead.status === activeTabDef.status)
+    : leadsState;
 
   const query = searchQuery.trim().toLowerCase();
   const visibleLeads = query
@@ -63,6 +90,85 @@ export default function LeadsCommandesPage() {
           lead.phone.includes(query)
       )
     : filteredLeads;
+
+  const allVisibleSelected =
+    visibleLeads.length > 0 && visibleLeads.every((l) => selectedIds.has(l.id));
+
+  function toggleSelectAll() {
+    setSelectedIds((prev) => {
+      if (allVisibleSelected) {
+        const next = new Set(prev);
+        visibleLeads.forEach((l) => next.delete(l.id));
+        return next;
+      }
+      const next = new Set(prev);
+      visibleLeads.forEach((l) => next.add(l.id));
+      return next;
+    });
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function deleteLead(id: string) {
+    setLeadsState((prev) => prev.filter((l) => l.id !== id));
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }
+
+  function applyAssign(agent: string) {
+    if (!modal || (modal.type !== "assign")) return;
+    const ids = modal.leadIds;
+    setLeadsState((prev) =>
+      prev.map((l) => (ids.includes(l.id) ? { ...l, assignedTo: agent } : l))
+    );
+    setSelectedIds(new Set());
+    setModal(null);
+  }
+
+  function applyStatus(status: string) {
+    if (!modal || modal.type !== "status") return;
+    const ids = modal.leadIds;
+    if (status !== "Aucun changement") {
+      setLeadsState((prev) =>
+        prev.map((l) =>
+          ids.includes(l.id) ? { ...l, status: status as LeadStatus } : l
+        )
+      );
+    }
+    setSelectedIds(new Set());
+    setModal(null);
+  }
+
+  function getRowActions(lead: Lead) {
+    return {
+      onViewDetails: () => setModal({ type: "details", lead }),
+      onEdit: () => setModal({ type: "edit", lead }),
+      onCopyReference: () => {
+        navigator.clipboard?.writeText(lead.reference);
+      },
+      onCall: () => {
+        window.location.href = `tel:${lead.phone}`;
+      },
+      onCopyContact: () => {
+        navigator.clipboard?.writeText(lead.phone);
+      },
+      onAssign: () => setModal({ type: "assign", leadIds: [lead.id] }),
+      onChangeStatus: () => setModal({ type: "status", leadIds: [lead.id] }),
+      onDelete: () => deleteLead(lead.id),
+    };
+  }
+
+  const selectedCount = selectedIds.size;
 
   return (
     <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-4 lg:px-6 lg:py-5">
@@ -89,7 +195,7 @@ export default function LeadsCommandesPage() {
             Importer Excel
           </button>
           <button
-            onClick={() => setModalOpen(true)}
+            onClick={() => setModal({ type: "create" })}
             className="flex items-center gap-1.5 rounded-lg bg-gray-900 px-3.5 py-2 text-[13px] font-medium text-white hover:bg-gray-800"
           >
             <Plus className="h-3.5 w-3.5" />
@@ -99,7 +205,7 @@ export default function LeadsCommandesPage() {
       </div>
 
       <div className="mb-4 flex items-center gap-5 overflow-x-auto border-b border-gray-200 lg:gap-6 lg:overflow-visible">
-        {tabs.map((tab) => (
+        {dynamicTabs.map((tab) => (
           <button
             key={tab.label}
             onClick={() => setActiveTab(tab.label)}
@@ -220,26 +326,71 @@ export default function LeadsCommandesPage() {
           {visibleLeads.length.toLocaleString("fr-FR")} resultats
         </p>
         <label className="flex items-center gap-1.5 text-[12.5px] text-gray-600">
-          <input type="checkbox" className="h-4 w-4 rounded border-gray-300" />
+          <input
+            type="checkbox"
+            checked={allVisibleSelected}
+            onChange={toggleSelectAll}
+            className="h-4 w-4 rounded border-gray-300"
+          />
           Selectionner tout
         </label>
       </div>
 
       <div className="hidden rounded-xl border border-gray-200 bg-white lg:block">
-        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-          <div className="flex items-center gap-2.5">
-            <ShoppingCart className="h-4 w-4 text-gray-600" />
-            <div>
-              <p className="text-[14px] font-semibold text-gray-900">
-                Leads &amp; Commandes
-              </p>
-              <p className="text-[12.5px] text-gray-500">
-                {activeTabDef.count.toLocaleString("fr-FR")} resultats
-              </p>
+        {selectedCount > 0 ? (
+          <div className="flex items-center justify-between border-b border-gray-100 bg-blue-50/60 px-5 py-3">
+            <p className="text-[13px] font-medium text-blue-700">
+              {selectedCount} selectionne{selectedCount > 1 ? "s" : ""}
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() =>
+                  setModal({ type: "assign", leadIds: Array.from(selectedIds) })
+                }
+                className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-[12.5px] font-medium text-gray-700 hover:bg-gray-50"
+              >
+                <UserPlus className="h-3.5 w-3.5" />
+                Assigner
+              </button>
+              <button
+                onClick={() =>
+                  setModal({ type: "status", leadIds: Array.from(selectedIds) })
+                }
+                className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-[12.5px] font-medium text-gray-700 hover:bg-gray-50"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Changer statut
+              </button>
+              <button
+                onClick={() => setSelectedIds(new Set())}
+                className="flex items-center gap-1 px-2 py-1.5 text-[12.5px] font-medium text-gray-500 hover:text-gray-700"
+              >
+                <X className="h-3.5 w-3.5" />
+                Deselectionner
+              </button>
             </div>
           </div>
-          <input type="checkbox" className="h-4 w-4 rounded border-gray-300" />
-        </div>
+        ) : (
+          <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+            <div className="flex items-center gap-2.5">
+              <ShoppingCart className="h-4 w-4 text-gray-600" />
+              <div>
+                <p className="text-[14px] font-semibold text-gray-900">
+                  Leads &amp; Commandes
+                </p>
+                <p className="text-[12.5px] text-gray-500">
+                  {activeTabDef.count.toLocaleString("fr-FR")} resultats
+                </p>
+              </div>
+            </div>
+            <input
+              type="checkbox"
+              checked={allVisibleSelected}
+              onChange={toggleSelectAll}
+              className="h-4 w-4 rounded border-gray-300"
+            />
+          </div>
+        )}
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[980px] text-left">
@@ -248,6 +399,8 @@ export default function LeadsCommandesPage() {
                 <th className="w-10 px-5 py-3">
                   <input
                     type="checkbox"
+                    checked={allVisibleSelected}
+                    onChange={toggleSelectAll}
                     className="h-4 w-4 rounded border-gray-300"
                   />
                 </th>
@@ -284,6 +437,8 @@ export default function LeadsCommandesPage() {
                   <td className="px-5 py-3">
                     <input
                       type="checkbox"
+                      checked={selectedIds.has(lead.id)}
+                      onChange={() => toggleSelect(lead.id)}
                       className="h-4 w-4 rounded border-gray-300"
                     />
                   </td>
@@ -328,12 +483,34 @@ export default function LeadsCommandesPage() {
                     {lead.date}
                   </td>
                   <td className="px-3 py-3">
-                    <RowActionsMenu />
+                    <RowActionsMenu {...getRowActions(lead)} />
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div className="flex items-center justify-between border-t border-gray-100 px-5 py-3">
+          <p className="text-[12px] text-gray-500">
+            {visibleLeads.length > 0 ? 1 : 0}-{visibleLeads.length} /{" "}
+            {visibleLeads.length} resultats
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              disabled
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 text-gray-300"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </button>
+            <span className="text-[12px] text-gray-600">Page 1 / 1</span>
+            <button
+              disabled
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 text-gray-300"
+            >
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -344,85 +521,128 @@ export default function LeadsCommandesPage() {
             <p className="text-[13px]">Aucune commande dans cette categorie.</p>
           </div>
         )}
-        {visibleLeads.map((lead) => (
-          <div
-            key={lead.id}
-            className="rounded-xl border border-gray-200 bg-white p-3.5"
-          >
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span
-                  className={`rounded-md px-2 py-1 text-[11.5px] font-medium ${sourceBadgeStyles[lead.source]}`}
-                >
-                  {lead.source}
+        {visibleLeads.map((lead) => {
+          const actions = getRowActions(lead);
+          return (
+            <div
+              key={lead.id}
+              className="rounded-xl border border-gray-200 bg-white p-3.5"
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={`rounded-md px-2 py-1 text-[11.5px] font-medium ${sourceBadgeStyles[lead.source]}`}
+                  >
+                    {lead.source}
+                  </span>
+                  <span
+                    className={`rounded-md px-2 py-1 text-[11.5px] font-medium ${statusBadgeStyles[lead.status]}`}
+                  >
+                    {lead.status}
+                  </span>
+                </div>
+                <RowActionsMenu {...actions} />
+              </div>
+
+              <div className="mb-3 flex gap-3">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-[10px] font-medium text-gray-400">
+                  {lead.productLabel}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[14px] font-semibold text-gray-900">
+                    {lead.client}
+                  </p>
+                  <p className="text-[12.5px] text-gray-400">{lead.phone}</p>
+                  <p className="mt-1 flex items-center gap-1 text-[12.5px] text-gray-500">
+                    <User className="h-3 w-3" />
+                    {lead.assignedTo}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mb-2 flex items-center justify-between">
+                <span className="rounded-md bg-gray-100 px-2 py-1 text-[11.5px] font-medium text-gray-500">
+                  {lead.shipping}
                 </span>
-                <span
-                  className={`rounded-md px-2 py-1 text-[11.5px] font-medium ${statusBadgeStyles[lead.status]}`}
-                >
-                  {lead.status}
+                <span className="text-[16px] font-semibold text-gray-900">
+                  {lead.amount}
                 </span>
               </div>
-              <RowActionsMenu />
-            </div>
 
-            <div className="mb-3 flex gap-3">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-[10px] font-medium text-gray-400">
-                {lead.productLabel}
+              <p className="mb-3 text-[12px] text-gray-400">{lead.date}</p>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={actions.onViewDetails}
+                  className="flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-2 text-[12.5px] font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  <Eye className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">Voir details</span>
+                </button>
+                <button
+                  onClick={actions.onCall}
+                  className="flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-2 text-[12.5px] font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  <Phone className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">Appeler</span>
+                </button>
+                <button
+                  onClick={actions.onCopyContact}
+                  className="flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-2 text-[12.5px] font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  <Copy className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">Copier numero</span>
+                </button>
+                <button
+                  onClick={actions.onDelete}
+                  className="flex items-center justify-center gap-1.5 rounded-lg border border-red-200 py-2 text-[12.5px] font-medium text-red-600 hover:bg-red-50"
+                >
+                  <Trash2 className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">Supprimer commande</span>
+                </button>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[14px] font-semibold text-gray-900">
-                  {lead.client}
-                </p>
-                <p className="text-[12.5px] text-gray-400">{lead.phone}</p>
-                <p className="mt-1 flex items-center gap-1 text-[12.5px] text-gray-500">
-                  <User className="h-3 w-3" />
-                  {lead.assignedTo}
-                </p>
-              </div>
             </div>
-
-            <div className="mb-2 flex items-center justify-between">
-              <span className="rounded-md bg-gray-100 px-2 py-1 text-[11.5px] font-medium text-gray-500">
-                {lead.shipping}
-              </span>
-              <span className="text-[16px] font-semibold text-gray-900">
-                {lead.amount}
-              </span>
-            </div>
-
-            <p className="mb-3 text-[12px] text-gray-400">{lead.date}</p>
-
-            <div className="grid grid-cols-2 gap-2">
-              <button className="flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-2 text-[12.5px] font-medium text-gray-700 hover:bg-gray-50">
-                <Eye className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">Voir details</span>
-              </button>
-              <button className="flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-2 text-[12.5px] font-medium text-gray-700 hover:bg-gray-50">
-                <Phone className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">Appeler</span>
-              </button>
-              <button className="flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-2 text-[12.5px] font-medium text-gray-700 hover:bg-gray-50">
-                <Copy className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">Copier numero</span>
-              </button>
-              <button className="flex items-center justify-center gap-1.5 rounded-lg border border-red-200 py-2 text-[12.5px] font-medium text-red-600 hover:bg-red-50">
-                <Trash2 className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">Supprimer commande</span>
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <button
-        onClick={() => setModalOpen(true)}
+        onClick={() => setModal({ type: "create" })}
         className="fixed bottom-5 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-gray-900 text-white shadow-lg hover:bg-gray-800 lg:hidden"
       >
         <Plus className="h-6 w-6" />
       </button>
 
-      {modalOpen && (
-        <CreateCommandeModal onClose={() => setModalOpen(false)} />
+      {modal?.type === "create" && (
+        <CreateCommandeModal onClose={() => setModal(null)} />
+      )}
+      {modal?.type === "details" && (
+        <OrderDetailsModal
+          lead={modal.lead}
+          onClose={() => setModal(null)}
+          onEdit={() => setModal({ type: "edit", lead: modal.lead })}
+        />
+      )}
+      {modal?.type === "edit" && (
+        <EditOrderModal
+          lead={modal.lead}
+          onClose={() => setModal(null)}
+          onSave={() => setModal(null)}
+        />
+      )}
+      {modal?.type === "status" && (
+        <ChangeStatusModal
+          count={modal.leadIds.length}
+          onClose={() => setModal(null)}
+          onApply={applyStatus}
+        />
+      )}
+      {modal?.type === "assign" && (
+        <AssignModal
+          count={modal.leadIds.length}
+          onClose={() => setModal(null)}
+          onApply={applyAssign}
+        />
       )}
     </div>
   );

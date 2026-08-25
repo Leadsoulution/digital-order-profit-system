@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Clock, Mail, Phone, X } from "lucide-react";
+import { Clock, Mail, Phone, PhoneCall, Timer, X } from "lucide-react";
 import DonutRing from "./DonutRing";
 import { callHistoryByAgent, type AgentPerformance } from "./confirmation-data";
 
 const statusStyles: Record<string, string> = {
   Confirme: "bg-emerald-50 text-emerald-600",
-  Manque: "bg-red-50 text-red-600",
-  "En cours": "bg-amber-50 text-amber-600",
+  Repart: "bg-orange-50 text-orange-600",
+  "Pas de reponse": "bg-gray-100 text-gray-500",
+  "Numero incorrect": "bg-red-50 text-red-600",
 };
 
 export default function AgentPerformanceCard({
@@ -100,7 +101,10 @@ export default function AgentPerformanceCard({
         </div>
       </div>
 
-      <button className="mt-3 w-full rounded-lg border border-gray-200 py-1.5 text-[12.5px] font-medium text-gray-600 hover:bg-gray-50">
+      <button
+        onClick={() => setHistoryOpen(true)}
+        className="mt-3 w-full rounded-lg border border-gray-200 py-1.5 text-[12.5px] font-medium text-gray-600 hover:bg-gray-50"
+      >
         Voir details
       </button>
 
@@ -118,7 +122,7 @@ export default function AgentPerformanceCard({
                   {agent.name}
                 </p>
                 <p className="truncate text-[11.5px] text-gray-400">
-                  Historique des appels
+                  {agent.email}
                 </p>
               </div>
               <button
@@ -129,22 +133,84 @@ export default function AgentPerformanceCard({
               </button>
             </div>
 
-            <div className="max-h-80 space-y-2 overflow-y-auto p-4">
-              {history.map((call) => (
+            <div className="grid grid-cols-4 gap-1.5 px-4 pt-3">
+              <div className="rounded-md bg-purple-50 px-1.5 py-1.5 text-center">
+                <p className="text-[12px] font-semibold text-purple-700">
+                  {agent.assigned.toLocaleString("fr-FR")}
+                </p>
+                <p className="text-[9.5px] text-purple-500">Assignes</p>
+              </div>
+              <div className="rounded-md bg-cyan-50 px-1.5 py-1.5 text-center">
+                <p className="text-[12px] font-semibold text-cyan-700">
+                  {agent.contacted.toLocaleString("fr-FR")}
+                </p>
+                <p className="text-[9.5px] text-cyan-600">Contactes</p>
+              </div>
+              <div className="rounded-md bg-emerald-50 px-1.5 py-1.5 text-center">
+                <p className="text-[12px] font-semibold text-emerald-700">
+                  {agent.confirmed.toLocaleString("fr-FR")}
+                </p>
+                <p className="text-[9.5px] text-emerald-600">Confirmes</p>
+              </div>
+              <div className="rounded-md bg-amber-50 px-1.5 py-1.5 text-center">
+                <p className="text-[12px] font-semibold text-amber-700">
+                  {agent.pending.toLocaleString("fr-FR")}
+                </p>
+                <p className="text-[9.5px] text-amber-600">En cours</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-1.5 px-4 pt-2">
+              <div className="flex flex-col items-center gap-0.5 rounded-md bg-gray-50 py-1.5">
+                <Clock className="h-3.5 w-3.5 text-blue-400" />
+                <p className="text-[11.5px] font-medium text-gray-700">
+                  {agent.avgResponseTime}
+                </p>
+                <p className="text-[9px] text-gray-400">Temps reponse</p>
+              </div>
+              <div className="flex flex-col items-center gap-0.5 rounded-md bg-gray-50 py-1.5">
+                <Timer className="h-3.5 w-3.5 text-violet-400" />
+                <p className="text-[11.5px] font-medium text-gray-700">
+                  {agent.firstResponseTime}
+                </p>
+                <p className="text-[9px] text-gray-400">1re reponse</p>
+              </div>
+              <div className="flex flex-col items-center gap-0.5 rounded-md bg-gray-50 py-1.5">
+                <PhoneCall className="h-3.5 w-3.5 text-emerald-400" />
+                <p className="text-[11.5px] font-medium text-gray-700">
+                  {agent.avgCallDuration}
+                </p>
+                <p className="text-[9px] text-gray-400">Duree appels</p>
+              </div>
+            </div>
+
+            <p className="px-4 pb-1 pt-3 text-[11px] font-semibold tracking-wide text-gray-500">
+              HISTORIQUE DES APPELS
+            </p>
+            <div className="max-h-64 space-y-2 overflow-y-auto px-4 pb-4">
+              {history.length === 0 && (
+                <p className="py-6 text-center text-[12px] text-gray-400">
+                  Aucun appel enregistre
+                </p>
+              )}
+              {history.map((call, i) => (
                 <div
-                  key={call.reference}
+                  key={`${call.reference}-${i}`}
                   className="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2"
                 >
-                  <div className="min-w-0">
-                    <p className="truncate text-[12.5px] font-medium text-gray-800">
-                      {call.reference}
-                    </p>
-                    <p className="truncate text-[11.5px] text-gray-400">
-                      {call.phone}
-                    </p>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Phone className="h-3.5 w-3.5 shrink-0 text-gray-300" />
+                    <div className="min-w-0">
+                      <p className="truncate text-[12.5px] font-medium text-gray-800">
+                        {call.reference}
+                      </p>
+                      <p className="truncate text-[11.5px] text-gray-400">
+                        {call.phone}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <span className="text-[11.5px] text-gray-400">
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <span className="text-[11px] text-gray-400">
                       {call.duration}
                     </span>
                     <span

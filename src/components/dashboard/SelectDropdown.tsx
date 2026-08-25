@@ -4,26 +4,26 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, ChevronsUpDown, Search } from "lucide-react";
 import type { ComponentType } from "react";
 
-type SingleSelectProps = {
+type BaseProps = {
   variant?: "filter" | "field";
   icon?: ComponentType<{ className?: string }>;
   panelTitle?: string;
   pinnedLabel: string;
   options: string[];
-  multi?: false;
   searchable?: boolean;
   searchPlaceholder?: string;
+  /** Single-select only: controls the displayed value externally. */
+  value?: string;
+  /** Single-select only: called when an option is chosen. */
+  onSelect?: (value: string) => void;
 };
 
-type MultiSelectProps = {
-  variant?: "filter" | "field";
-  icon?: ComponentType<{ className?: string }>;
-  panelTitle?: string;
-  pinnedLabel: string;
-  options: string[];
+type SingleSelectProps = BaseProps & {
+  multi?: false;
+};
+
+type MultiSelectProps = BaseProps & {
   multi: true;
-  searchable?: boolean;
-  searchPlaceholder?: string;
 };
 
 type SelectDropdownProps = SingleSelectProps | MultiSelectProps;
@@ -37,11 +37,22 @@ export default function SelectDropdown({
   multi,
   searchable,
   searchPlaceholder = "Rechercher...",
+  value,
+  onSelect,
 }: SelectDropdownProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<string | null>(null);
+  const [internalSelected, setInternalSelected] = useState<string | null>(null);
   const [multiSelected, setMultiSelected] = useState<string[]>([]);
+  const selected = !multi && value !== undefined ? value : internalSelected;
+
+  function selectOption(option: string | null) {
+    if (!multi) {
+      if (onSelect && option !== null) onSelect(option);
+      if (value === undefined) setInternalSelected(option);
+    }
+    setOpen(false);
+  }
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -122,10 +133,7 @@ export default function SelectDropdown({
           <div className="max-h-56 overflow-y-auto py-1">
             {!multi && (
               <button
-                onClick={() => {
-                  setSelected(null);
-                  setOpen(false);
-                }}
+                onClick={() => selectOption(null)}
                 className={`flex w-full items-center gap-2 px-3 py-2 text-left text-[12.5px] ${
                   selected === null
                     ? "bg-blue-50 font-medium text-blue-600"
@@ -169,10 +177,7 @@ export default function SelectDropdown({
               ) : (
                 <button
                   key={option}
-                  onClick={() => {
-                    setSelected(option);
-                    setOpen(false);
-                  }}
+                  onClick={() => selectOption(option)}
                   className={`flex w-full items-center gap-2 px-3 py-2 text-left text-[12.5px] ${
                     selected === option
                       ? "bg-blue-50 font-medium text-blue-600"

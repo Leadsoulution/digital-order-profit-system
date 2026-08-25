@@ -7,44 +7,71 @@ import {
   Save,
   Calendar,
   Clock,
-  Plus,
-  Pencil,
-  Trash2,
-  ArrowRight,
+  Activity,
+  Phone,
+  Target,
+  Maximize2,
   User,
+  Info,
 } from "lucide-react";
 import DonutRing from "./DonutRing";
 import AgentPerformanceCard from "./AgentPerformanceCard";
 import Toggle from "./Toggle";
 import SelectDropdown from "./SelectDropdown";
+import RuleList from "./RuleList";
+import DateRangeCalendar from "./DateRangeCalendar";
 import {
   agentPerformance,
   rebalanceModes,
   percentageRules,
   sourceKeyOptions,
-  sourceRules,
+  productCatalog,
+  regionOptions,
+  initialProductRules,
+  initialSourceRules,
+  initialRegionRules,
   excludedFromReassignment,
+  type AssignedRule,
 } from "./confirmation-data";
 import { agents } from "./leads-data";
 
 const dateRanges = [
   "Aujourd'hui",
+  "Hier",
   "7 derniers jours",
   "Ce mois-ci",
   "Maximum",
   "Personnalisee",
 ];
 
+const modeDescriptions: Record<string, string> = {
+  "Par pourcentage":
+    "Repartissez les nouvelles assignations entre les agents actifs avec des poids.",
+  "Par produit":
+    "Faites correspondre le produit selectionne au catalogue admin. La regle assignera d'utiliser l'id du produit correspondant. Chaque produit cible peut avoir un agent qui recoit les commandes correspondantes.",
+  "Par source":
+    "Faites correspondre la source ou le nom de source enregistre sur les commandes entrantes. Chaque regle cible une seule source qui pointe vers un seul agent.",
+  "Par region":
+    "Faites correspondre la ville ou region enregistree sur les commandes entrantes. Chaque regle cible une ville ou region personnalisee.",
+  Manuel:
+    "Aucune assignation automatique n'est appliquee dans ce mode. Chaque commande doit etre assignee manuellement depuis Leads & Commandes.",
+};
+
 export default function ConfirmationPage() {
   const [activeTab, setActiveTab] = useState<"performance" | "parametres">(
     "performance"
   );
   const [activeRange, setActiveRange] = useState("Maximum");
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [customRangeLabel, setCustomRangeLabel] = useState<string | null>(null);
   const [activeMode, setActiveMode] = useState(rebalanceModes[0]);
   const [autoAssign, setAutoAssign] = useState(true);
   const [autoReassign, setAutoReassign] = useState(true);
   const [dedupDetection, setDedupDetection] = useState(true);
   const [excluded, setExcluded] = useState<string[]>(excludedFromReassignment);
+  const [productRules, setProductRules] = useState<AssignedRule[]>(initialProductRules);
+  const [sourceRules, setSourceRules] = useState<AssignedRule[]>(initialSourceRules);
+  const [regionRules, setRegionRules] = useState<AssignedRule[]>(initialRegionRules);
 
   const globalRate = 72;
   const totalPercent = percentageRules.reduce((sum, r) => sum + r.percent, 0);
@@ -54,6 +81,18 @@ export default function ConfirmationPage() {
       prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
     );
   }
+
+  function applyCustomRange(start: Date, end: Date) {
+    const fmt = (d: Date) =>
+      d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+    setCustomRangeLabel(`${fmt(start)} - ${fmt(end)}`);
+    setActiveRange("Personnalisee");
+    setCalendarOpen(false);
+  }
+
+  const productOptions = productCatalog.map((p) => ({ label: p.name, sublabel: p.sku }));
+  const sourceOptions = sourceKeyOptions.map((s) => ({ label: s }));
+  const regionSelectOptions = regionOptions.map((r) => ({ label: r }));
 
   return (
     <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-4 lg:px-6 lg:py-5">
@@ -112,18 +151,34 @@ export default function ConfirmationPage() {
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2">
               {dateRanges.map((range) => (
-                <button
-                  key={range}
-                  onClick={() => setActiveRange(range)}
-                  className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[12.5px] font-medium transition-colors ${
-                    activeRange === range
-                      ? "bg-gray-900 text-white"
-                      : "border border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  {range === "Maximum" && <Calendar className="h-3.5 w-3.5" />}
-                  {range}
-                </button>
+                <div key={range} className="relative">
+                  <button
+                    onClick={() => {
+                      if (range === "Personnalisee") {
+                        setCalendarOpen((v) => !v);
+                      } else {
+                        setActiveRange(range);
+                        setCalendarOpen(false);
+                      }
+                    }}
+                    className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[12.5px] font-medium transition-colors ${
+                      activeRange === range
+                        ? "bg-gray-900 text-white"
+                        : "border border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    {range === "Maximum" && <Calendar className="h-3.5 w-3.5" />}
+                    {range === "Personnalisee" && customRangeLabel
+                      ? customRangeLabel
+                      : range}
+                  </button>
+                  {range === "Personnalisee" && calendarOpen && (
+                    <DateRangeCalendar
+                      onApply={applyCustomRange}
+                      onCancel={() => setCalendarOpen(false)}
+                    />
+                  )}
+                </div>
               ))}
             </div>
 
@@ -137,33 +192,60 @@ export default function ConfirmationPage() {
             </div>
           </div>
 
-          <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
-                <Clock className="h-4.5 w-4.5 text-blue-500" />
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-stretch">
+            <div className="grid flex-1 grid-cols-2 gap-3 lg:grid-cols-4">
+              <div className="flex items-center gap-2.5 rounded-xl bg-violet-50 p-3.5">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white">
+                  <Clock className="h-4 w-4 text-violet-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[17px] font-semibold text-gray-900">—</p>
+                  <p className="truncate text-[11.5px] text-gray-500">
+                    Duree moy. traitement
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-[19px] font-semibold text-gray-900">
-                  34h 27m
-                </p>
-                <p className="text-[12.5px] text-gray-500">
-                  Temps de reponse moyen
-                </p>
+              <div className="flex items-center gap-2.5 rounded-xl bg-violet-50 p-3.5">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white">
+                  <Activity className="h-4 w-4 text-violet-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[17px] font-semibold text-gray-900">
+                    3m 37s
+                  </p>
+                  <p className="truncate text-[11.5px] text-gray-500">
+                    Duree moy. session
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2.5 rounded-xl bg-blue-50 p-3.5">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white">
+                  <Phone className="h-4 w-4 text-blue-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[17px] font-semibold text-gray-900">1</p>
+                  <p className="truncate text-[11.5px] text-gray-500">
+                    Contactes (equipe)
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2.5 rounded-xl bg-emerald-50 p-3.5">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white">
+                  <Target className="h-4 w-4 text-emerald-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[17px] font-semibold text-gray-900">
+                    100%
+                  </p>
+                  <p className="truncate text-[11.5px] text-gray-500">
+                    Taux conv. equipe
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50">
-                <Clock className="h-4.5 w-4.5 text-violet-500" />
-              </div>
-              <div>
-                <p className="text-[19px] font-semibold text-gray-900">
-                  1h 39m
-                </p>
-                <p className="text-[12.5px] text-gray-500">
-                  Temps de premiere reponse
-                </p>
-              </div>
-            </div>
+            <button className="flex h-11 w-11 shrink-0 items-center justify-center self-center rounded-lg bg-orange-500 text-white hover:bg-orange-600 sm:self-stretch">
+              <Maximize2 className="h-4.5 w-4.5" />
+            </button>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -175,137 +257,116 @@ export default function ConfirmationPage() {
       ) : (
         <div className="max-w-3xl space-y-6">
           <div className="rounded-xl border border-gray-200 bg-white p-4">
-            <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-[11px] font-semibold tracking-wide text-gray-500">
                   MODE ACTIF &mdash; {activeMode.toUpperCase()}
                 </p>
                 <p className="mt-1 text-[12.5px] text-gray-500">
-                  {activeMode === "Par pourcentage" &&
-                    "Repartissez les nouvelles assignations entre les agents actifs avec des poids."}
-                  {activeMode === "Par produit" &&
-                    "Faites correspondre le produit selectionne au catalogue admin. Chaque produit cible peut avoir un agent qui recoit les commandes correspondantes."}
-                  {activeMode === "Par source" &&
-                    "Faites correspondre la source a un agent. La regle assignera les commandes entrantes de cette source a l'agent configure."}
+                  {modeDescriptions[activeMode]}
                 </p>
               </div>
-              <div className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 p-1">
-                {rebalanceModes.map((mode) => (
-                  <button
-                    key={mode}
-                    onClick={() => setActiveMode(mode)}
-                    className={`whitespace-nowrap rounded-md px-3 py-1.5 text-[12.5px] font-medium transition-colors ${
-                      activeMode === mode
-                        ? "bg-white text-gray-900 shadow-sm"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    {mode}
-                  </button>
-                ))}
+              <div className="w-full shrink-0 sm:w-52">
+                <SelectDropdown
+                  variant="field"
+                  pinnedLabel={rebalanceModes[0]}
+                  options={rebalanceModes}
+                  value={activeMode}
+                  onSelect={setActiveMode}
+                />
               </div>
-            </div>
-
-            <div className="mb-2 flex items-center justify-between">
-              <p className="text-[13px] font-semibold text-gray-800">
-                Regles pour ce mode
-              </p>
-              {activeMode === "Par pourcentage" && (
-                <div className="flex items-center gap-2">
-                  <button className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-[12px] font-medium text-gray-700 hover:bg-gray-50">
-                    Expliquer
-                  </button>
-                  <button className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-[12px] font-medium text-gray-700 hover:bg-gray-50">
-                    Reinitialiser
-                  </button>
-                </div>
-              )}
-              {activeMode !== "Par pourcentage" && (
-                <button className="flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-[12px] font-medium text-gray-700 hover:bg-gray-50">
-                  <Plus className="h-3.5 w-3.5" />
-                  Ajouter une regle
-                </button>
-              )}
             </div>
 
             {activeMode === "Par pourcentage" && (
-              <div className="space-y-3">
-                {percentageRules.map((rule) => (
-                  <div key={rule.name} className="flex items-center gap-3">
-                    <span
-                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white ${rule.avatarColor}`}
-                    >
-                      {rule.name.charAt(0).toUpperCase()}
-                    </span>
-                    <span className="w-32 shrink-0 truncate text-[12.5px] text-gray-700">
-                      {rule.name}
-                    </span>
-                    <input
-                      type="range"
-                      min={0}
-                      max={30}
-                      defaultValue={rule.weight}
-                      className="h-1.5 flex-1 cursor-pointer accent-gray-900"
-                    />
-                    <span className="w-6 shrink-0 text-right text-[12.5px] text-gray-500">
-                      {rule.weight}
-                    </span>
-                    <span className="w-10 shrink-0 text-right text-[12.5px] font-medium text-gray-700">
-                      {rule.percent}%
-                    </span>
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-[13px] font-semibold text-gray-800">
+                    Regles pour ce mode
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-[12px] font-medium text-gray-700 hover:bg-gray-50">
+                      Expliquer
+                    </button>
+                    <button className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-[12px] font-medium text-gray-700 hover:bg-gray-50">
+                      Reinitialiser
+                    </button>
                   </div>
-                ))}
-                <div
-                  className={`mt-3 rounded-lg px-3 py-2 text-center text-[12.5px] font-medium ${
-                    totalPercent === 100
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "bg-amber-50 text-amber-700"
-                  }`}
-                >
-                  {totalPercent}% &middot; Total reparti
+                </div>
+                <div className="space-y-3">
+                  {percentageRules.map((rule) => (
+                    <div key={rule.name} className="flex items-center gap-3">
+                      <span
+                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white ${rule.avatarColor}`}
+                      >
+                        {rule.name.charAt(0).toUpperCase()}
+                      </span>
+                      <span className="w-32 shrink-0 truncate text-[12.5px] text-gray-700">
+                        {rule.name}
+                      </span>
+                      <input
+                        type="range"
+                        min={0}
+                        max={30}
+                        defaultValue={rule.weight}
+                        className="h-1.5 flex-1 cursor-pointer accent-gray-900"
+                      />
+                      <span className="w-6 shrink-0 text-right text-[12.5px] text-gray-500">
+                        {rule.weight}
+                      </span>
+                      <span className="w-10 shrink-0 text-right text-[12.5px] font-medium text-gray-700">
+                        {rule.percent}%
+                      </span>
+                    </div>
+                  ))}
+                  <div
+                    className={`mt-3 rounded-lg px-3 py-2 text-center text-[12.5px] font-medium ${
+                      totalPercent === 100
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-amber-50 text-amber-700"
+                    }`}
+                  >
+                    {totalPercent}% &middot; Total reparti
+                  </div>
                 </div>
               </div>
             )}
 
             {activeMode === "Par produit" && (
-              <div className="rounded-lg border border-dashed border-gray-200 py-10 text-center text-[12.5px] text-gray-400">
-                Aucune regle pour ce mode
-              </div>
+              <RuleList
+                rules={productRules}
+                onChange={setProductRules}
+                options={productOptions}
+                emptyText="Aucune regle pour ce mode"
+                searchPlaceholder="Selectionner une valeur"
+              />
             )}
 
             {activeMode === "Par source" && (
-              <div className="space-y-2">
-                <SelectDropdown
-                  variant="field"
-                  pinnedLabel="Selectionner une source"
-                  options={sourceKeyOptions}
-                  searchable
-                  searchPlaceholder="Rechercher une source..."
-                />
-                <div className="space-y-2 pt-1">
-                  {sourceRules.map((rule) => (
-                    <div
-                      key={rule.source}
-                      className="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2"
-                    >
-                      <div className="flex items-center gap-2 text-[12.5px] text-gray-700">
-                        <span className="rounded-md bg-gray-100 px-2 py-1 font-medium text-gray-600">
-                          {rule.source}
-                        </span>
-                        <ArrowRight className="h-3.5 w-3.5 text-gray-400" />
-                        <span className="font-medium">{rule.agent}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <button className="rounded-md p-1.5 text-gray-400 hover:bg-gray-50 hover:text-gray-600">
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        <button className="rounded-md p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600">
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <RuleList
+                rules={sourceRules}
+                onChange={setSourceRules}
+                options={sourceOptions}
+                emptyText="Aucune regle pour ce mode"
+                searchPlaceholder="Selectionner une valeur"
+              />
+            )}
+
+            {activeMode === "Par region" && (
+              <RuleList
+                rules={regionRules}
+                onChange={setRegionRules}
+                options={regionSelectOptions}
+                emptyText="Aucune regle pour ce mode"
+                searchPlaceholder="Selectionner une valeur"
+              />
+            )}
+
+            {activeMode === "Manuel" && (
+              <div className="flex items-start gap-2.5 rounded-lg border border-dashed border-gray-200 bg-gray-50 px-3 py-4">
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+                <p className="text-[12.5px] text-gray-500">
+                  {modeDescriptions.Manuel}
+                </p>
               </div>
             )}
           </div>
@@ -423,7 +484,7 @@ export default function ConfirmationPage() {
             </p>
             <SelectDropdown
               variant="field"
-              pinnedLabel="Fatima Zahra"
+              pinnedLabel="Aucun agent de secours"
               options={agents}
             />
           </div>
