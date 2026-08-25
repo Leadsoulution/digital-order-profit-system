@@ -60,9 +60,9 @@ export default function AgentPerformanceCard({
           <p className="text-[11px] font-medium text-gray-400">Taux Confs</p>
           <div className="flex items-center gap-1.5 text-[12px] text-gray-600">
             <Clock className="h-3 w-3 shrink-0 text-blue-400" />
-            {agent.avgResponseTime}
+            <span className="font-mono">{agent.avgResponseTime}</span>
             <span className="text-gray-300">·</span>
-            {agent.firstResponseTime}
+            <span className="font-mono">{agent.firstResponseTime}</span>
           </div>
         </div>
         <button
@@ -76,25 +76,25 @@ export default function AgentPerformanceCard({
 
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-md bg-purple-50 px-2.5 py-1.5">
-          <p className="text-[13px] font-semibold text-purple-700">
+          <p className="font-mono text-[13px] font-semibold text-purple-700">
             {agent.assigned.toLocaleString("fr-FR")}
           </p>
           <p className="text-[10.5px] text-purple-500">Assignes</p>
         </div>
         <div className="rounded-md bg-cyan-50 px-2.5 py-1.5">
-          <p className="text-[13px] font-semibold text-cyan-700">
+          <p className="font-mono text-[13px] font-semibold text-cyan-700">
             {agent.contacted.toLocaleString("fr-FR")}
           </p>
           <p className="text-[10.5px] text-cyan-600">Contactes</p>
         </div>
         <div className="rounded-md bg-emerald-50 px-2.5 py-1.5">
-          <p className="text-[13px] font-semibold text-emerald-700">
+          <p className="font-mono text-[13px] font-semibold text-emerald-700">
             {agent.confirmed.toLocaleString("fr-FR")}
           </p>
           <p className="text-[10.5px] text-emerald-600">Confirmes</p>
         </div>
         <div className="rounded-md bg-amber-50 px-2.5 py-1.5">
-          <p className="text-[13px] font-semibold text-amber-700">
+          <p className="font-mono text-[13px] font-semibold text-amber-700">
             {agent.pending.toLocaleString("fr-FR")}
           </p>
           <p className="text-[10.5px] text-amber-600">En cours</p>
@@ -135,25 +135,25 @@ export default function AgentPerformanceCard({
 
             <div className="grid grid-cols-4 gap-1.5 px-4 pt-3">
               <div className="rounded-md bg-purple-50 px-1.5 py-1.5 text-center">
-                <p className="text-[12px] font-semibold text-purple-700">
+                <p className="font-mono text-[12px] font-semibold text-purple-700">
                   {agent.assigned.toLocaleString("fr-FR")}
                 </p>
                 <p className="text-[9.5px] text-purple-500">Assignes</p>
               </div>
               <div className="rounded-md bg-cyan-50 px-1.5 py-1.5 text-center">
-                <p className="text-[12px] font-semibold text-cyan-700">
+                <p className="font-mono text-[12px] font-semibold text-cyan-700">
                   {agent.contacted.toLocaleString("fr-FR")}
                 </p>
                 <p className="text-[9.5px] text-cyan-600">Contactes</p>
               </div>
               <div className="rounded-md bg-emerald-50 px-1.5 py-1.5 text-center">
-                <p className="text-[12px] font-semibold text-emerald-700">
+                <p className="font-mono text-[12px] font-semibold text-emerald-700">
                   {agent.confirmed.toLocaleString("fr-FR")}
                 </p>
                 <p className="text-[9.5px] text-emerald-600">Confirmes</p>
               </div>
               <div className="rounded-md bg-amber-50 px-1.5 py-1.5 text-center">
-                <p className="text-[12px] font-semibold text-amber-700">
+                <p className="font-mono text-[12px] font-semibold text-amber-700">
                   {agent.pending.toLocaleString("fr-FR")}
                 </p>
                 <p className="text-[9.5px] text-amber-600">En cours</p>
@@ -163,21 +163,21 @@ export default function AgentPerformanceCard({
             <div className="grid grid-cols-3 gap-1.5 px-4 pt-2">
               <div className="flex flex-col items-center gap-0.5 rounded-md bg-gray-50 py-1.5">
                 <Clock className="h-3.5 w-3.5 text-blue-400" />
-                <p className="text-[11.5px] font-medium text-gray-700">
+                <p className="font-mono text-[11.5px] font-medium text-gray-700">
                   {agent.avgResponseTime}
                 </p>
                 <p className="text-[9px] text-gray-400">Temps reponse</p>
               </div>
               <div className="flex flex-col items-center gap-0.5 rounded-md bg-gray-50 py-1.5">
                 <Timer className="h-3.5 w-3.5 text-violet-400" />
-                <p className="text-[11.5px] font-medium text-gray-700">
+                <p className="font-mono text-[11.5px] font-medium text-gray-700">
                   {agent.firstResponseTime}
                 </p>
                 <p className="text-[9px] text-gray-400">1re reponse</p>
               </div>
               <div className="flex flex-col items-center gap-0.5 rounded-md bg-gray-50 py-1.5">
                 <PhoneCall className="h-3.5 w-3.5 text-emerald-400" />
-                <p className="text-[11.5px] font-medium text-gray-700">
+                <p className="font-mono text-[11.5px] font-medium text-gray-700">
                   {agent.avgCallDuration}
                 </p>
                 <p className="text-[9px] text-gray-400">Duree appels</p>
@@ -204,13 +204,13 @@ export default function AgentPerformanceCard({
                       <p className="truncate text-[12.5px] font-medium text-gray-800">
                         {call.reference}
                       </p>
-                      <p className="truncate text-[11.5px] text-gray-400">
+                      <p className="truncate font-mono text-[11.5px] text-gray-400">
                         {call.phone}
                       </p>
                     </div>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
-                    <span className="text-[11px] text-gray-400">
+                    <span className="font-mono text-[11px] text-gray-400">
                       {call.duration}
                     </span>
                     <span

@@ -60,37 +60,37 @@ export default function AgentLiveDetailModal({
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-lg border border-gray-100 px-3 py-2.5">
               <p className="text-[11px] text-gray-400">Assignes</p>
-              <p className="text-[17px] font-semibold text-gray-900">
+              <p className="font-mono text-[17px] font-semibold text-gray-900">
                 {agent.assignes.toLocaleString("fr-FR")}
               </p>
             </div>
             <div className="rounded-lg border border-gray-100 px-3 py-2.5">
               <p className="text-[11px] text-gray-400">En cours</p>
-              <p className="text-[17px] font-semibold text-gray-900">
+              <p className="font-mono text-[17px] font-semibold text-gray-900">
                 {agent.enCours.toLocaleString("fr-FR")}
               </p>
             </div>
             <div className="rounded-lg border border-gray-100 px-3 py-2.5">
               <p className="text-[11px] text-gray-400">Confirmes</p>
-              <p className="text-[17px] font-semibold text-emerald-600">
+              <p className="font-mono text-[17px] font-semibold text-emerald-600">
                 {agent.confirmes.toLocaleString("fr-FR")}
               </p>
             </div>
             <div className="rounded-lg border border-gray-100 px-3 py-2.5">
               <p className="text-[11px] text-gray-400">Rappeles</p>
-              <p className="text-[17px] font-semibold text-orange-500">
+              <p className="font-mono text-[17px] font-semibold text-orange-500">
                 {agent.rappels.toLocaleString("fr-FR")}
               </p>
             </div>
             <div className="rounded-lg border border-gray-100 px-3 py-2.5">
               <p className="text-[11px] text-gray-400">Contactes</p>
-              <p className="text-[17px] font-semibold text-gray-900">
+              <p className="font-mono text-[17px] font-semibold text-gray-900">
                 {agent.contactes}
               </p>
             </div>
             <div className="rounded-lg border border-gray-100 px-3 py-2.5">
               <p className="text-[11px] text-gray-400">Conversion</p>
-              <p className="text-[17px] font-semibold text-gray-900">
+              <p className="font-mono text-[17px] font-semibold text-gray-900">
                 {agent.conversion.toFixed(1)}%
               </p>
             </div>
@@ -115,7 +115,7 @@ export default function AgentLiveDetailModal({
                       </span>
                     </span>
                     <span className="flex shrink-0 items-center gap-1">
-                      <span className="text-[12.5px] font-semibold text-gray-800">
+                      <span className="font-mono text-[12.5px] font-semibold text-gray-800">
                         {item.value.toLocaleString("fr-FR")}
                       </span>
                       <ChevronRight className="h-3 w-3 text-gray-300" />
@@ -165,7 +165,7 @@ export default function AgentLiveDetailModal({
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-500">Temps moyen de session</span>
-                <span className="font-medium text-gray-700">1h 18m</span>
+                <span className="font-mono font-medium text-gray-700">1h 18m</span>
               </div>
             </div>
           </div>

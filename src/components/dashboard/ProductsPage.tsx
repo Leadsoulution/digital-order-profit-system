@@ -60,7 +60,7 @@ export default function ProductsPage() {
               Produits
             </h1>
             <p className="text-[13px] text-gray-500">
-              {totalProducts} produits enregistres
+              <span className="font-mono">{totalProducts}</span> produits enregistres
             </p>
           </div>
         </div>
@@ -80,7 +80,7 @@ export default function ProductsPage() {
             <p className="text-[10.5px] font-semibold uppercase tracking-wide text-gray-400">
               Total produits
             </p>
-            <p className="text-[19px] font-semibold text-gray-900">
+            <p className="font-mono text-[19px] font-semibold text-gray-900">
               {totalProducts}
             </p>
           </div>
@@ -91,7 +91,7 @@ export default function ProductsPage() {
             <p className="text-[10.5px] font-semibold uppercase tracking-wide text-gray-400">
               Actifs
             </p>
-            <p className="text-[19px] font-semibold text-gray-900">
+            <p className="font-mono text-[19px] font-semibold text-gray-900">
               {activeProducts}
             </p>
             <p className="text-[11px] text-gray-400">% catalogue</p>
@@ -103,7 +103,7 @@ export default function ProductsPage() {
             <p className="text-[10.5px] font-semibold uppercase tracking-wide text-gray-400">
               Stock total
             </p>
-            <p className="text-[19px] font-semibold text-gray-900">
+            <p className="font-mono text-[19px] font-semibold text-gray-900">
               {totalStock.toLocaleString("fr-FR")}
             </p>
           </div>
@@ -114,7 +114,7 @@ export default function ProductsPage() {
             <p className="text-[10.5px] font-semibold uppercase tracking-wide text-gray-400">
               Stock bas
             </p>
-            <p className="text-[19px] font-semibold text-gray-900">
+            <p className="font-mono text-[19px] font-semibold text-gray-900">
               {lowStockCount}
             </p>
           </div>
@@ -190,7 +190,7 @@ export default function ProductsPage() {
                 Catalogue produits
               </p>
               <p className="text-[12.5px] text-gray-500">
-                {visibleProducts.length} produits enregistres
+                <span className="font-mono">{visibleProducts.length}</span> produits enregistres
               </p>
             </div>
 
@@ -230,32 +230,32 @@ export default function ProductsPage() {
                             </span>
                           </div>
                         </td>
-                        <td className="px-3 py-3 text-gray-500">{product.sku}</td>
+                        <td className="px-3 py-3 font-mono text-gray-500">{product.sku}</td>
                         <td className="px-3 py-3 text-gray-600">
                           {product.supplier}
                         </td>
-                        <td className="px-3 py-3 font-medium text-gray-800">
+                        <td className="px-3 py-3 font-mono font-medium text-gray-800">
                           {product.priceVente} MAD
                         </td>
-                        <td className="px-3 py-3 text-gray-500">
+                        <td className="px-3 py-3 font-mono text-gray-500">
                           {product.coutFournisseur} MAD
                         </td>
-                        <td className="px-3 py-3 text-gray-600">
+                        <td className="px-3 py-3 font-mono text-gray-600">
                           {productMargin(product)}%
                         </td>
-                        <td className="px-3 py-3 text-gray-700">
+                        <td className="px-3 py-3 font-mono text-gray-700">
                           {product.stockTotal}
                         </td>
-                        <td className="px-3 py-3 text-gray-700">
+                        <td className="px-3 py-3 font-mono text-gray-700">
                           {product.disponible}
                         </td>
-                        <td className="px-3 py-3 text-gray-500">
+                        <td className="px-3 py-3 font-mono text-gray-500">
                           {product.reserve}
                         </td>
-                        <td className="px-3 py-3 text-gray-500">
+                        <td className="px-3 py-3 font-mono text-gray-500">
                           {product.enCours}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-3 text-gray-500">
+                        <td className="whitespace-nowrap px-3 py-3 font-mono text-gray-500">
                           {product.dernierMouvement}
                         </td>
                         <td className="px-3 py-3">

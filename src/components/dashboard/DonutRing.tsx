@@ -36,7 +36,7 @@ export default function DonutRing({
           strokeLinecap="round"
         />
       </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-[13px] font-semibold text-gray-800">
+      <span className="absolute inset-0 flex items-center justify-center font-mono text-[13px] font-semibold text-gray-800">
         {percent}%
       </span>
     </div>

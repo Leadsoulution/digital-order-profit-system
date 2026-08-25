@@ -64,12 +64,12 @@ export default function SourceDonut({
         <span className="text-[9.5px] font-medium tracking-wide text-gray-400">
           VOLUME
         </span>
-        <span className="text-[17px] font-semibold text-gray-900">
+        <span className="font-mono text-[17px] font-semibold text-gray-900">
           {total.toLocaleString("fr-FR")}
         </span>
         {top && (
           <span className="text-[10.5px] text-gray-500">
-            {top.label} {top.percent}%
+            {top.label} <span className="font-mono">{top.percent}%</span>
           </span>
         )}
       </div>

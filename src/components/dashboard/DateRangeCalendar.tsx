@@ -135,7 +135,7 @@ export default function DateRangeCalendar({
                 key={i}
                 disabled={!cell.inMonth}
                 onClick={() => pickDay(cell.date)}
-                className={`mx-auto flex h-7 w-7 items-center justify-center rounded-full text-[12px] ${
+                className={`mx-auto flex h-7 w-7 items-center justify-center rounded-full font-mono text-[12px] ${
                   !cell.inMonth
                     ? "text-gray-300"
                     : isEdge

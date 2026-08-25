@@ -56,10 +56,12 @@ export default function OrderDetailsModal({
                 <p className="text-[13px] font-medium text-gray-800">
                   {lead.productName}
                 </p>
-                <p className="text-[12px] text-gray-500">1 x {lead.amount}</p>
+                <p className="text-[12px] text-gray-500">
+                  <span className="font-mono">1 x {lead.amount}</span>
+                </p>
               </div>
             </div>
-            <p className="text-[14px] font-semibold text-gray-900">
+            <p className="font-mono text-[14px] font-semibold text-gray-900">
               {lead.amount}
             </p>
           </div>
@@ -111,7 +113,7 @@ export default function OrderDetailsModal({
                       <p className="text-[12.5px] font-medium text-gray-700">
                         {lead.status} &mdash; Par Mohamed Alaoui
                       </p>
-                      <p className="text-[11.5px] text-gray-400">
+                      <p className="font-mono text-[11.5px] text-gray-400">
                         {lead.date}
                       </p>
                       <p className="mt-0.5 text-[11.5px] text-gray-500">
@@ -125,7 +127,7 @@ export default function OrderDetailsModal({
                       <p className="text-[12.5px] font-medium text-gray-700">
                         Nouveau &mdash; Par Mohamed Alaoui
                       </p>
-                      <p className="text-[11.5px] text-gray-400">
+                      <p className="font-mono text-[11.5px] text-gray-400">
                         {lead.date}
                       </p>
                       <p className="mt-0.5 text-[11.5px] text-gray-500">

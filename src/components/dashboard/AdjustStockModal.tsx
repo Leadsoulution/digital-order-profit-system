@@ -29,8 +29,8 @@ export default function AdjustStockModal({
                 Ajuster le stock
               </h2>
               <p className="mt-0.5 text-[12.5px] text-gray-500">
-                {product.name} &middot; {product.sku} &middot; Disponible :{" "}
-                {product.disponible}
+                {product.name} &middot; <span className="font-mono">{product.sku}</span> &middot; Disponible :{" "}
+                <span className="font-mono">{product.disponible}</span>
               </p>
             </div>
           </div>

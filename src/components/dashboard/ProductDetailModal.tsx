@@ -45,7 +45,7 @@ export default function ProductDetailModal({
               <h2 className="text-[15px] font-semibold text-gray-900">
                 {product.name}
               </h2>
-              <p className="text-[12px] text-gray-400">{product.sku}</p>
+              <p className="font-mono text-[12px] text-gray-400">{product.sku}</p>
               <div className="mt-1.5 flex items-center gap-1.5">
                 <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10.5px] font-medium text-emerald-600">
                   {product.status}
@@ -154,17 +154,17 @@ export default function ProductDetailModal({
                   <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-lg border border-gray-100 px-3 py-2">
                       <p className="text-[11px] text-gray-400">Fois vendu</p>
-                      <p className="text-[15px] font-semibold text-gray-800">0</p>
+                      <p className="font-mono text-[15px] font-semibold text-gray-800">0</p>
                     </div>
                     <div className="rounded-lg border border-gray-100 px-3 py-2">
                       <p className="text-[11px] text-gray-400">Fois retourne</p>
-                      <p className="text-[15px] font-semibold text-gray-800">0</p>
+                      <p className="font-mono text-[15px] font-semibold text-gray-800">0</p>
                     </div>
                     <div className="col-span-2 rounded-lg border border-gray-100 px-3 py-2">
                       <p className="text-[11px] text-gray-400">
                         Dernier mouvement
                       </p>
-                      <p className="text-[12.5px] font-medium text-gray-700">
+                      <p className="font-mono text-[12.5px] font-medium text-gray-700">
                         {product.dernierMouvement}
                       </p>
                     </div>
@@ -176,7 +176,7 @@ export default function ProductDetailModal({
                 <div className="rounded-lg border border-gray-100 p-3">
                   <p className="text-[11px] text-gray-400">Prix catalogue</p>
                   <div className="mt-0.5 flex items-center justify-between">
-                    <p className="text-[19px] font-semibold text-gray-900">
+                    <p className="font-mono text-[19px] font-semibold text-gray-900">
                       {product.priceVente} MAD
                     </p>
                     <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10.5px] font-medium text-emerald-600">
@@ -187,19 +187,19 @@ export default function ProductDetailModal({
 
                 <div className="grid grid-cols-3 gap-2">
                   <div className="rounded-lg border border-gray-100 px-2.5 py-2 text-center">
-                    <p className="text-[15px] font-semibold text-gray-800">
+                    <p className="font-mono text-[15px] font-semibold text-gray-800">
                       {product.stockTotal}
                     </p>
                     <p className="text-[10px] text-gray-400">Stock total</p>
                   </div>
                   <div className="rounded-lg border border-gray-100 px-2.5 py-2 text-center">
-                    <p className="text-[15px] font-semibold text-gray-800">
+                    <p className="font-mono text-[15px] font-semibold text-gray-800">
                       {product.reserve}
                     </p>
                     <p className="text-[10px] text-gray-400">Reserve</p>
                   </div>
                   <div className="rounded-lg border border-gray-100 px-2.5 py-2 text-center">
-                    <p className="text-[15px] font-semibold text-emerald-600">
+                    <p className="font-mono text-[15px] font-semibold text-emerald-600">
                       {product.disponible}
                     </p>
                     <p className="text-[10px] text-gray-400">Disponible</p>
@@ -213,7 +213,7 @@ export default function ProductDetailModal({
                   <dl className="space-y-1.5 text-[12.5px]">
                     <div className="flex items-center justify-between">
                       <dt className="text-gray-400">SKU</dt>
-                      <dd className="font-medium text-gray-700">{product.sku}</dd>
+                      <dd className="font-mono font-medium text-gray-700">{product.sku}</dd>
                     </div>
                     <div className="flex items-center justify-between">
                       <dt className="text-gray-400">Fournisseur</dt>
@@ -223,19 +223,19 @@ export default function ProductDetailModal({
                     </div>
                     <div className="flex items-center justify-between">
                       <dt className="text-gray-400">Cout fournisseur</dt>
-                      <dd className="font-medium text-gray-700">
+                      <dd className="font-mono font-medium text-gray-700">
                         {product.coutFournisseur} MAD
                       </dd>
                     </div>
                     <div className="flex items-center justify-between">
                       <dt className="text-gray-400">Marge</dt>
-                      <dd className="font-medium text-gray-700">
+                      <dd className="font-mono font-medium text-gray-700">
                         {productMargin(product)}%
                       </dd>
                     </div>
                     <div className="flex items-center justify-between">
                       <dt className="text-gray-400">Seuil reappro</dt>
-                      <dd className="font-medium text-gray-700">
+                      <dd className="font-mono font-medium text-gray-700">
                         {product.seuilReappro}
                       </dd>
                     </div>
@@ -358,7 +358,7 @@ export default function ProductDetailModal({
                     Depenses recentes
                   </p>
                   <span className="text-[12px] text-gray-500">
-                    Total 0 MAD
+                    Total <span className="font-mono">0 MAD</span>
                   </span>
                 </div>
                 <p className="text-center text-[12px] text-gray-400">

@@ -28,7 +28,7 @@ export default function ChangeStatusModal({
             <RefreshCw className="mt-0.5 h-4 w-4 text-gray-700" />
             <div>
               <h2 className="text-[15px] font-semibold text-gray-900">
-                Mettre a jour le statut de {count} commande{count > 1 ? "s" : ""}
+                Mettre a jour le statut de <span className="font-mono">{count}</span> commande{count > 1 ? "s" : ""}
               </h2>
               <p className="mt-0.5 text-[12.5px] text-gray-500">
                 Appliquer un statut manuel a la selection. Si vous choisissez

@@ -201,7 +201,7 @@ export default function EditOrderModal({
                         {p.name}
                       </p>
                       <p className="text-[12px] text-gray-500">
-                        {p.price} MAD / unite
+                        <span className="font-mono">{p.price} MAD</span> / unite
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-1.5 rounded-md border border-gray-200 px-1.5 py-1">
@@ -211,7 +211,7 @@ export default function EditOrderModal({
                       >
                         <Minus className="h-3 w-3" />
                       </button>
-                      <span className="w-4 text-center text-[12.5px] text-gray-700">
+                      <span className="w-4 text-center font-mono text-[12.5px] text-gray-700">
                         {p.qty}
                       </span>
                       <button
@@ -238,7 +238,7 @@ export default function EditOrderModal({
                     {product.name}
                   </span>
                   <span className="shrink-0 text-[12px] text-gray-500">
-                    {product.price} MAD / unite
+                    <span className="font-mono">{product.price} MAD</span> / unite
                   </span>
                 </button>
               ))}
@@ -249,7 +249,7 @@ export default function EditOrderModal({
                 <p className="text-[11px] font-semibold tracking-wide text-gray-500">
                   SOUS-TOTAL CATALOGUE
                 </p>
-                <p className="mt-1 text-[13px] font-medium text-gray-700">
+                <p className="mt-1 font-mono text-[13px] font-medium text-gray-700">
                   {subtotal} MAD
                 </p>
               </div>
@@ -262,7 +262,7 @@ export default function EditOrderModal({
                     type="text"
                     defaultValue={subtotal}
                     key={subtotal}
-                    className="w-20 rounded-md border border-gray-200 px-2 py-1 text-[13px] text-gray-800 focus:border-blue-400 focus:outline-none"
+                    className="w-20 rounded-md border border-gray-200 px-2 py-1 font-mono text-[13px] text-gray-800 focus:border-blue-400 focus:outline-none"
                   />
                   <span className="text-[13px] text-gray-500">MAD</span>
                 </div>

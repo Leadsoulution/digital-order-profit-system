@@ -316,7 +316,7 @@ export default function CreateProductModal({ onClose }: { onClose: () => void })
                 ))}
                 {variantCount > 1 && (
                   <p className="text-center text-[12px] text-gray-500">
-                    Genere {variantCount} variantes
+                    Genere <span className="font-mono">{variantCount}</span> variantes
                   </p>
                 )}
               </div>

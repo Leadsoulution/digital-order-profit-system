@@ -291,7 +291,7 @@ export default function CreateCommandeModal({
                         {product.detail}
                       </p>
                     </div>
-                    <span className="whitespace-nowrap text-[12.5px] text-gray-600">
+                    <span className="whitespace-nowrap font-mono text-[12.5px] text-gray-600">
                       {product.price}
                     </span>
                     <ChevronDown className="h-3.5 w-3.5 shrink-0 text-gray-400" />
@@ -317,7 +317,7 @@ export default function CreateCommandeModal({
                   <input
                     type="text"
                     defaultValue="0"
-                    className="w-20 rounded-md border border-gray-200 px-2 py-1 text-[13px] text-gray-800 focus:border-blue-400 focus:outline-none"
+                    className="w-20 rounded-md border border-gray-200 px-2 py-1 font-mono text-[13px] text-gray-800 focus:border-blue-400 focus:outline-none"
                   />
                   <span className="text-[13px] text-gray-500">MAD</span>
                 </div>

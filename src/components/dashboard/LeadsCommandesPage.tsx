@@ -181,7 +181,9 @@ export default function LeadsCommandesPage() {
             <h1 className="text-[19px] font-semibold text-gray-900">
               Leads &amp; Commandes
             </h1>
-            <p className="text-[13px] text-gray-500">48745 leads au total</p>
+            <p className="text-[13px] text-gray-500">
+              <span className="font-mono">48745</span> leads au total
+            </p>
           </div>
         </div>
 
@@ -215,7 +217,7 @@ export default function LeadsCommandesPage() {
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
           >
-            {tab.label} ({tab.count})
+            {tab.label} (<span className="font-mono">{tab.count}</span>)
           </button>
         ))}
       </div>
@@ -323,7 +325,10 @@ export default function LeadsCommandesPage() {
 
       <div className="mb-3 flex items-center justify-between lg:hidden">
         <p className="text-[13px] text-gray-500">
-          {visibleLeads.length.toLocaleString("fr-FR")} resultats
+          <span className="font-mono">
+            {visibleLeads.length.toLocaleString("fr-FR")}
+          </span>{" "}
+          resultats
         </p>
         <label className="flex items-center gap-1.5 text-[12.5px] text-gray-600">
           <input
@@ -340,7 +345,8 @@ export default function LeadsCommandesPage() {
         {selectedCount > 0 ? (
           <div className="flex items-center justify-between border-b border-gray-100 bg-blue-50/60 px-5 py-3">
             <p className="text-[13px] font-medium text-blue-700">
-              {selectedCount} selectionne{selectedCount > 1 ? "s" : ""}
+              <span className="font-mono">{selectedCount}</span> selectionne
+              {selectedCount > 1 ? "s" : ""}
             </p>
             <div className="flex items-center gap-2">
               <button
@@ -379,7 +385,10 @@ export default function LeadsCommandesPage() {
                   Leads &amp; Commandes
                 </p>
                 <p className="text-[12.5px] text-gray-500">
-                  {activeTabDef.count.toLocaleString("fr-FR")} resultats
+                  <span className="font-mono">
+                    {activeTabDef.count.toLocaleString("fr-FR")}
+                  </span>{" "}
+                  resultats
                 </p>
               </div>
             </div>
@@ -452,7 +461,7 @@ export default function LeadsCommandesPage() {
                   </td>
                   <td className="px-3 py-3">
                     <p className="font-medium text-blue-600">{lead.client}</p>
-                    <p className="text-[12px] text-gray-400">{lead.phone}</p>
+                    <p className="font-mono text-[12px] text-gray-400">{lead.phone}</p>
                   </td>
                   <td className="px-3 py-3">
                     <span
@@ -464,7 +473,7 @@ export default function LeadsCommandesPage() {
                   <td className="px-3 py-3 text-gray-600">
                     {lead.assignedTo}
                   </td>
-                  <td className="px-3 py-3 font-semibold text-gray-900">
+                  <td className="px-3 py-3 font-mono font-semibold text-gray-900">
                     {lead.amount}
                   </td>
                   <td className="px-3 py-3">
@@ -479,7 +488,7 @@ export default function LeadsCommandesPage() {
                       {lead.shipping}
                     </span>
                   </td>
-                  <td className="whitespace-nowrap px-3 py-3 text-gray-500">
+                  <td className="whitespace-nowrap px-3 py-3 font-mono text-gray-500">
                     {lead.date}
                   </td>
                   <td className="px-3 py-3">
@@ -493,8 +502,11 @@ export default function LeadsCommandesPage() {
 
         <div className="flex items-center justify-between border-t border-gray-100 px-5 py-3">
           <p className="text-[12px] text-gray-500">
-            {visibleLeads.length > 0 ? 1 : 0}-{visibleLeads.length} /{" "}
-            {visibleLeads.length} resultats
+            <span className="font-mono">
+              {visibleLeads.length > 0 ? 1 : 0}-{visibleLeads.length} /{" "}
+              {visibleLeads.length}
+            </span>{" "}
+            resultats
           </p>
           <div className="flex items-center gap-2">
             <button
@@ -503,7 +515,9 @@ export default function LeadsCommandesPage() {
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </button>
-            <span className="text-[12px] text-gray-600">Page 1 / 1</span>
+            <span className="text-[12px] text-gray-600">
+              Page <span className="font-mono">1 / 1</span>
+            </span>
             <button
               disabled
               className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 text-gray-300"
@@ -552,7 +566,7 @@ export default function LeadsCommandesPage() {
                   <p className="truncate text-[14px] font-semibold text-gray-900">
                     {lead.client}
                   </p>
-                  <p className="text-[12.5px] text-gray-400">{lead.phone}</p>
+                  <p className="font-mono text-[12.5px] text-gray-400">{lead.phone}</p>
                   <p className="mt-1 flex items-center gap-1 text-[12.5px] text-gray-500">
                     <User className="h-3 w-3" />
                     {lead.assignedTo}
@@ -564,12 +578,12 @@ export default function LeadsCommandesPage() {
                 <span className="rounded-md bg-gray-100 px-2 py-1 text-[11.5px] font-medium text-gray-500">
                   {lead.shipping}
                 </span>
-                <span className="text-[16px] font-semibold text-gray-900">
+                <span className="font-mono text-[16px] font-semibold text-gray-900">
                   {lead.amount}
                 </span>
               </div>
 
-              <p className="mb-3 text-[12px] text-gray-400">{lead.date}</p>
+              <p className="mb-3 font-mono text-[12px] text-gray-400">{lead.date}</p>
 
               <div className="grid grid-cols-2 gap-2">
                 <button

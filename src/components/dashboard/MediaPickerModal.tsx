@@ -67,7 +67,7 @@ export default function MediaPickerModal({
           </div>
 
           <p className="mb-2 text-[11.5px] text-gray-400">
-            {mediaLibrary.length} media(s)
+            <span className="font-mono">{mediaLibrary.length}</span> media(s)
           </p>
 
           <div className="grid max-h-72 grid-cols-3 gap-3 overflow-y-auto sm:grid-cols-4">
@@ -109,7 +109,7 @@ export default function MediaPickerModal({
             }}
             className="rounded-lg bg-gray-900 px-4 py-2 text-[13px] font-medium text-white hover:bg-gray-800"
           >
-            Terminer ({selected.length})
+            Terminer (<span className="font-mono">{selected.length}</span>)
           </button>
         </div>
       </div>

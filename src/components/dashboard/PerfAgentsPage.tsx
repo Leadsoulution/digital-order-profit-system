@@ -101,7 +101,7 @@ export default function PerfAgentsPage() {
                     <p className="truncate text-[10.5px] font-semibold uppercase tracking-wide text-gray-400">
                       {kpi.label}
                     </p>
-                    <p className="text-[19px] font-semibold text-gray-900">
+                    <p className="font-mono text-[19px] font-semibold text-gray-900">
                       {kpi.value}
                     </p>
                     {"subtitle" in kpi && kpi.subtitle && (
@@ -170,22 +170,22 @@ export default function PerfAgentsPage() {
                         Compte actif
                       </span>
                     </td>
-                    <td className="px-3 py-3 font-medium text-gray-800">
+                    <td className="px-3 py-3 font-mono font-medium text-gray-800">
                       {agent.assignes.toLocaleString("fr-FR")}
                     </td>
-                    <td className="px-3 py-3 text-gray-600">
+                    <td className="px-3 py-3 font-mono text-gray-600">
                       {agent.enCours.toLocaleString("fr-FR")}
                     </td>
-                    <td className="px-3 py-3 font-medium text-orange-500">
+                    <td className="px-3 py-3 font-mono font-medium text-orange-500">
                       {agent.rappels.toLocaleString("fr-FR")}
                     </td>
-                    <td className="px-3 py-3 font-medium text-emerald-600">
+                    <td className="px-3 py-3 font-mono font-medium text-emerald-600">
                       {agent.confirmes.toLocaleString("fr-FR")}
                     </td>
-                    <td className="px-3 py-3 text-gray-500">
+                    <td className="px-3 py-3 font-mono text-gray-500">
                       {agent.contactes}
                     </td>
-                    <td className="px-3 py-3 text-gray-500">
+                    <td className="px-3 py-3 font-mono text-gray-500">
                       {agent.conversion.toFixed(1)}%
                     </td>
                     <td className="px-3 py-3 text-right">

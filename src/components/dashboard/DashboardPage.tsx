@@ -99,7 +99,8 @@ export default function DashboardPage() {
               Tableau de bord
             </h1>
             <p className="text-[13px] capitalize text-gray-500">
-              Vue d&apos;ensemble operationnelle &mdash; {todayLabel}
+              Vue d&apos;ensemble operationnelle &mdash;{" "}
+              <span className="font-mono">{todayLabel}</span>
             </p>
           </div>
         </div>
@@ -151,7 +152,7 @@ export default function DashboardPage() {
             <p className="text-[10px] font-semibold tracking-wide text-gray-400">
               PERIODE ACTIVE
             </p>
-            <p className="text-[13px] font-medium text-gray-800">
+            <p className="font-mono text-[13px] font-medium text-gray-800">
               25 aout 2025 &ndash; 25 aout 2026
             </p>
           </div>
@@ -225,7 +226,7 @@ export default function DashboardPage() {
                     {kpi.label}
                   </p>
                   <span
-                    className={`flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                    className={`flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 font-mono text-[10px] font-medium ${
                       kpi.trendUp
                         ? "bg-emerald-50 text-emerald-600"
                         : "bg-red-50 text-red-600"
@@ -242,7 +243,7 @@ export default function DashboardPage() {
                 <Icon className="h-4 w-4 shrink-0 text-gray-300" />
               </div>
               <div className="mb-1 flex items-baseline gap-1.5">
-                <p className="truncate text-[18px] font-semibold text-gray-900">
+                <p className="truncate font-mono text-[18px] font-semibold text-gray-900">
                   {kpi.value}
                 </p>
                 {kpi.subtitle && (
@@ -272,7 +273,7 @@ export default function DashboardPage() {
               </p>
             </div>
             <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-600">
-              Taux global 64%
+              Taux global <span className="font-mono">64%</span>
             </span>
           </div>
 
@@ -281,7 +282,7 @@ export default function DashboardPage() {
               <TrendingDown className="h-3.5 w-3.5" />
               PLUS GROSSE FUITE &middot; Confirmes
             </span>
-            <span className="font-semibold text-red-600">-26%</span>
+            <span className="font-mono font-semibold text-red-600">-26%</span>
           </div>
 
           <div className="space-y-2.5">
@@ -319,8 +320,8 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div className="w-16 shrink-0 text-right">
-                    <p className="text-[11px] text-gray-400">{stage.percent}%</p>
-                    <p className="text-[12.5px] font-semibold text-gray-800">
+                    <p className="font-mono text-[11px] text-gray-400">{stage.percent}%</p>
+                    <p className="font-mono text-[12.5px] font-semibold text-gray-800">
                       {stage.value.toLocaleString("fr-FR")}
                     </p>
                   </div>
@@ -360,8 +361,8 @@ export default function DashboardPage() {
                     <span className="truncate">{slice.label}</span>
                   </span>
                   <span className="flex shrink-0 items-center gap-2">
-                    <span className="text-gray-400">{slice.percent}%</span>
-                    <span className="w-14 text-right font-medium text-gray-700">
+                    <span className="font-mono text-gray-400">{slice.percent}%</span>
+                    <span className="w-14 text-right font-mono font-medium text-gray-700">
                       {slice.value.toLocaleString("fr-FR")}
                     </span>
                   </span>
@@ -449,7 +450,7 @@ export default function DashboardPage() {
                     />
                   </div>
                 </div>
-                <span className="shrink-0 text-[12px] font-semibold text-gray-700">
+                <span className="shrink-0 font-mono text-[12px] font-semibold text-gray-700">
                   {agent.confirmRate}%
                 </span>
               </div>
@@ -473,7 +474,7 @@ export default function DashboardPage() {
                 <p className="min-w-0 flex-1 truncate text-[12.5px] text-gray-700">
                   {product.name}
                 </p>
-                <span className="shrink-0 text-[12px] font-semibold text-gray-700">
+                <span className="shrink-0 font-mono text-[12px] font-semibold text-gray-700">
                   {product.count.toLocaleString("fr-FR")}
                 </span>
               </div>
@@ -499,7 +500,7 @@ export default function DashboardPage() {
                 <p className="min-w-0 flex-1 truncate text-[12.5px] text-gray-700">
                   {ad.campaign}
                 </p>
-                <span className="shrink-0 text-[12px] font-semibold text-emerald-600">
+                <span className="shrink-0 font-mono text-[12px] font-semibold text-emerald-600">
                   {ad.metric}
                 </span>
               </div>
@@ -629,7 +630,7 @@ export default function DashboardPage() {
                   {lead.client}
                 </p>
               </div>
-              <span className="shrink-0 text-[12.5px] font-semibold text-gray-900">
+              <span className="shrink-0 font-mono text-[12.5px] font-semibold text-gray-900">
                 {lead.amount}
               </span>
             </div>

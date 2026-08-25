@@ -116,15 +116,15 @@ export default function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
             <div className="relative flex items-center gap-1.5 rounded-lg border border-blue-100 bg-blue-50 px-2.5 py-1.5 text-[13px] font-medium text-blue-700">
               <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-blue-500" />
               <ShoppingCart className="h-3.5 w-3.5" />
-              48745
+              <span className="font-mono">48745</span>
             </div>
             <div className="flex items-center gap-1.5 rounded-lg border border-green-100 bg-green-50 px-2.5 py-1.5 text-[13px] font-medium text-green-700">
               <CheckCircle2 className="h-3.5 w-3.5" />
-              31327
+              <span className="font-mono">31327</span>
             </div>
             <div className="flex items-center gap-1.5 rounded-lg border border-orange-100 bg-orange-50 px-2.5 py-1.5 text-[13px] font-medium text-orange-700">
               <PackageCheck className="h-3.5 w-3.5" />
-              22869
+              <span className="font-mono">22869</span>
             </div>
           </div>
 
@@ -139,7 +139,7 @@ export default function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
 
           <button className="relative rounded-lg p-2 text-gray-500 hover:bg-gray-50">
             <Bell className="h-[18px] w-[18px]" />
-            <span className="absolute right-1 top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[9px] font-semibold text-white">
+            <span className="absolute right-1 top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 font-mono text-[9px] font-semibold text-white">
               2
             </span>
           </button>

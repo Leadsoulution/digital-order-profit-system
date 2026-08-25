@@ -210,7 +210,7 @@ export default function ConfirmationPage() {
                   <Activity className="h-4 w-4 text-violet-600" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[17px] font-semibold text-gray-900">
+                  <p className="font-mono text-[17px] font-semibold text-gray-900">
                     3m 37s
                   </p>
                   <p className="truncate text-[11.5px] text-gray-500">
@@ -223,7 +223,7 @@ export default function ConfirmationPage() {
                   <Phone className="h-4 w-4 text-blue-600" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[17px] font-semibold text-gray-900">1</p>
+                  <p className="font-mono text-[17px] font-semibold text-gray-900">1</p>
                   <p className="truncate text-[11.5px] text-gray-500">
                     Contactes (equipe)
                   </p>
@@ -234,7 +234,7 @@ export default function ConfirmationPage() {
                   <Target className="h-4 w-4 text-emerald-600" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[17px] font-semibold text-gray-900">
+                  <p className="font-mono text-[17px] font-semibold text-gray-900">
                     100%
                   </p>
                   <p className="truncate text-[11.5px] text-gray-500">
@@ -310,10 +310,10 @@ export default function ConfirmationPage() {
                         defaultValue={rule.weight}
                         className="h-1.5 flex-1 cursor-pointer accent-gray-900"
                       />
-                      <span className="w-6 shrink-0 text-right text-[12.5px] text-gray-500">
+                      <span className="w-6 shrink-0 text-right font-mono text-[12.5px] text-gray-500">
                         {rule.weight}
                       </span>
-                      <span className="w-10 shrink-0 text-right text-[12.5px] font-medium text-gray-700">
+                      <span className="w-10 shrink-0 text-right font-mono text-[12.5px] font-medium text-gray-700">
                         {rule.percent}%
                       </span>
                     </div>
@@ -325,7 +325,7 @@ export default function ConfirmationPage() {
                         : "bg-amber-50 text-amber-700"
                     }`}
                   >
-                    {totalPercent}% &middot; Total reparti
+                    <span className="font-mono">{totalPercent}%</span> &middot; Total reparti
                   </div>
                 </div>
               </div>
