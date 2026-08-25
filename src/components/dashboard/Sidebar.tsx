@@ -39,18 +39,18 @@ const sections: NavSection[] = [
   {
     title: "PRINCIPAL",
     items: [
-      { label: "Tableau de bord", icon: LayoutDashboard },
+      { label: "Tableau de bord", icon: LayoutDashboard, href: "/dashboard" },
       { label: "Leads / Commandes", icon: ShoppingCart, href: "/" },
       { label: "Imports Excel", icon: FileSpreadsheet },
       { label: "Confirmation", icon: PhoneCall, href: "/confirmation" },
-      { label: "Perf. Agents", icon: Activity },
+      { label: "Perf. Agents", icon: Activity, href: "/perf-agents" },
     ],
   },
   {
     title: "COMMERCE",
     items: [
       { label: "Pages & Boutiques", icon: Store },
-      { label: "Produits", icon: Package },
+      { label: "Produits", icon: Package, href: "/products" },
       { label: "Media", icon: ImageIcon },
       { label: "Publicite", icon: Megaphone },
       { label: "Integrations", icon: Puzzle },
@@ -113,7 +113,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         </button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 pb-4">
+      <nav className="scrollbar-hide flex-1 overflow-y-auto px-3 pb-4">
         {sections.map((section) => (
           <div key={section.title} className="mb-5">
             <p className="mb-1.5 px-3 text-[10.5px] font-semibold tracking-wider text-slate-500">

@@ -1,0 +1,340 @@
+"use client";
+
+import { useState } from "react";
+import {
+  Boxes,
+  CheckCircle2,
+  MoreVertical,
+  Package,
+  PackageCheck,
+  Plus,
+  Search,
+  SlidersHorizontal,
+  TrendingDown,
+} from "lucide-react";
+import SelectDropdown from "./SelectDropdown";
+import CreateProductModal from "./CreateProductModal";
+import ProductDetailModal from "./ProductDetailModal";
+import AdjustStockModal from "./AdjustStockModal";
+import {
+  products,
+  productMargin,
+  isLowStock,
+  productStatusOptions,
+  productStockOptions,
+  type Product,
+} from "./products-data";
+
+export default function ProductsPage() {
+  const [activeTab, setActiveTab] = useState<"catalogue" | "imports">("catalogue");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
+  const [stockProduct, setStockProduct] = useState<Product | null>(null);
+  const [openMenuSku, setOpenMenuSku] = useState<string | null>(null);
+
+  const query = searchQuery.trim().toLowerCase();
+  const visibleProducts = query
+    ? products.filter(
+        (p) =>
+          p.name.toLowerCase().includes(query) ||
+          p.sku.toLowerCase().includes(query)
+      )
+    : products;
+
+  const totalProducts = products.length;
+  const activeProducts = products.filter((p) => p.status === "Actif").length;
+  const totalStock = products.reduce((sum, p) => sum + p.stockTotal, 0);
+  const lowStockCount = products.filter(isLowStock).length;
+
+  return (
+    <div className="scrollbar-hide flex-1 overflow-y-auto bg-gray-50 px-4 py-4 lg:px-6 lg:py-5">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-100">
+            <Package className="h-4 w-4 text-gray-600" />
+          </div>
+          <div>
+            <h1 className="text-[19px] font-semibold text-gray-900">
+              Produits
+            </h1>
+            <p className="text-[13px] text-gray-500">
+              {totalProducts} produits enregistres
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setCreateOpen(true)}
+          className="flex items-center gap-1.5 rounded-lg bg-gray-900 px-3.5 py-2 text-[13px] font-medium text-white hover:bg-gray-800"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Nouveau produit
+        </button>
+      </div>
+
+      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-3.5">
+          <div>
+            <p className="text-[10.5px] font-semibold uppercase tracking-wide text-gray-400">
+              Total produits
+            </p>
+            <p className="text-[19px] font-semibold text-gray-900">
+              {totalProducts}
+            </p>
+          </div>
+          <Package className="h-4 w-4 text-gray-300" />
+        </div>
+        <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-3.5">
+          <div>
+            <p className="text-[10.5px] font-semibold uppercase tracking-wide text-gray-400">
+              Actifs
+            </p>
+            <p className="text-[19px] font-semibold text-gray-900">
+              {activeProducts}
+            </p>
+            <p className="text-[11px] text-gray-400">% catalogue</p>
+          </div>
+          <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+        </div>
+        <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-3.5">
+          <div>
+            <p className="text-[10.5px] font-semibold uppercase tracking-wide text-gray-400">
+              Stock total
+            </p>
+            <p className="text-[19px] font-semibold text-gray-900">
+              {totalStock.toLocaleString("fr-FR")}
+            </p>
+          </div>
+          <PackageCheck className="h-4 w-4 text-blue-300" />
+        </div>
+        <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-3.5">
+          <div>
+            <p className="text-[10.5px] font-semibold uppercase tracking-wide text-gray-400">
+              Stock bas
+            </p>
+            <p className="text-[19px] font-semibold text-gray-900">
+              {lowStockCount}
+            </p>
+          </div>
+          <TrendingDown className="h-4 w-4 text-orange-400" />
+        </div>
+      </div>
+
+      <div className="mb-4 flex items-center gap-6 border-b border-gray-200">
+        <button
+          onClick={() => setActiveTab("catalogue")}
+          className={`whitespace-nowrap border-b-2 pb-2.5 text-[13.5px] transition-colors ${
+            activeTab === "catalogue"
+              ? "border-gray-900 font-semibold text-gray-900"
+              : "border-transparent text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Catalogue produits
+        </button>
+        <button
+          onClick={() => setActiveTab("imports")}
+          className={`whitespace-nowrap border-b-2 pb-2.5 text-[13.5px] transition-colors ${
+            activeTab === "imports"
+              ? "border-gray-900 font-semibold text-gray-900"
+              : "border-transparent text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Imports &amp; mouvements
+        </button>
+      </div>
+
+      {activeTab === "imports" ? (
+        <div className="rounded-xl border border-dashed border-gray-200 bg-white py-16 text-center text-[13px] text-gray-400">
+          Aucun import ou mouvement de stock enregistre.
+        </div>
+      ) : (
+        <>
+          <div className="mb-4 flex flex-col gap-2.5 lg:flex-row lg:flex-wrap lg:items-center">
+            <div className="relative w-full lg:min-w-[260px] lg:flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Rechercher un produit..."
+                className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-[13px] text-gray-700 placeholder:text-gray-400 focus:border-blue-400 focus:outline-none"
+              />
+            </div>
+            <button
+              onClick={() => setFiltersOpen((v) => !v)}
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50 lg:w-auto"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              Filtres
+            </button>
+          </div>
+
+          {filtersOpen && (
+            <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <SelectDropdown
+                pinnedLabel="Tous Statut"
+                options={productStatusOptions}
+              />
+              <SelectDropdown
+                pinnedLabel="Tous Stock"
+                options={productStockOptions}
+              />
+            </div>
+          )}
+
+          <div className="rounded-xl border border-gray-200 bg-white">
+            <div className="border-b border-gray-100 px-5 py-4">
+              <p className="text-[14px] font-semibold text-gray-900">
+                Catalogue produits
+              </p>
+              <p className="text-[12.5px] text-gray-500">
+                {visibleProducts.length} produits enregistres
+              </p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[1200px] text-left">
+                <thead>
+                  <tr className="border-b border-gray-100 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                    <th className="px-5 py-3">Produit</th>
+                    <th className="px-3 py-3">SKU</th>
+                    <th className="px-3 py-3">Fournisseur</th>
+                    <th className="px-3 py-3">Prix vente</th>
+                    <th className="px-3 py-3">Cout</th>
+                    <th className="px-3 py-3">Marge</th>
+                    <th className="px-3 py-3">Stock total</th>
+                    <th className="px-3 py-3">Disponible</th>
+                    <th className="px-3 py-3">Reserve</th>
+                    <th className="px-3 py-3">En cours</th>
+                    <th className="px-3 py-3">Dernier mouvement</th>
+                    <th className="px-3 py-3">Statut</th>
+                    <th className="w-10 px-3 py-3" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleProducts.map((product) => {
+                    const lowStock = isLowStock(product);
+                    return (
+                      <tr
+                        key={product.sku}
+                        onClick={() => setDetailProduct(product)}
+                        className="cursor-pointer border-b border-gray-50 text-[13px] text-gray-700 last:border-0 hover:bg-gray-50/60"
+                      >
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className="h-8 w-8 shrink-0 rounded-md bg-gray-100" />
+                            <span className="font-medium text-gray-800">
+                              {product.name}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-3 py-3 text-gray-500">{product.sku}</td>
+                        <td className="px-3 py-3 text-gray-600">
+                          {product.supplier}
+                        </td>
+                        <td className="px-3 py-3 font-medium text-gray-800">
+                          {product.priceVente} MAD
+                        </td>
+                        <td className="px-3 py-3 text-gray-500">
+                          {product.coutFournisseur} MAD
+                        </td>
+                        <td className="px-3 py-3 text-gray-600">
+                          {productMargin(product)}%
+                        </td>
+                        <td className="px-3 py-3 text-gray-700">
+                          {product.stockTotal}
+                        </td>
+                        <td className="px-3 py-3 text-gray-700">
+                          {product.disponible}
+                        </td>
+                        <td className="px-3 py-3 text-gray-500">
+                          {product.reserve}
+                        </td>
+                        <td className="px-3 py-3 text-gray-500">
+                          {product.enCours}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-3 text-gray-500">
+                          {product.dernierMouvement}
+                        </td>
+                        <td className="px-3 py-3">
+                          {lowStock ? (
+                            <span className="rounded-md bg-orange-50 px-2 py-1 text-[12px] font-medium text-orange-600">
+                              Stock bas
+                            </span>
+                          ) : (
+                            <span className="rounded-md bg-emerald-50 px-2 py-1 text-[12px] font-medium text-emerald-600">
+                              Actif
+                            </span>
+                          )}
+                        </td>
+                        <td
+                          className="relative px-3 py-3"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            onClick={() =>
+                              setOpenMenuSku((v) =>
+                                v === product.sku ? null : product.sku
+                              )
+                            }
+                            className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </button>
+                          {openMenuSku === product.sku && (
+                            <div className="absolute right-3 top-full z-20 mt-1 w-48 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+                              <button
+                                onClick={() => {
+                                  setDetailProduct(product);
+                                  setOpenMenuSku(null);
+                                }}
+                                className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-[13px] text-gray-700 hover:bg-gray-50"
+                              >
+                                <Package className="h-3.5 w-3.5 text-gray-400" />
+                                Voir details
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setStockProduct(product);
+                                  setOpenMenuSku(null);
+                                }}
+                                className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-[13px] text-gray-700 hover:bg-gray-50"
+                              >
+                                <Boxes className="h-3.5 w-3.5 text-gray-400" />
+                                Ajuster le stock
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {createOpen && (
+        <CreateProductModal onClose={() => setCreateOpen(false)} />
+      )}
+      {detailProduct && (
+        <ProductDetailModal
+          product={detailProduct}
+          onClose={() => setDetailProduct(null)}
+          onEdit={() => setDetailProduct(null)}
+        />
+      )}
+      {stockProduct && (
+        <AdjustStockModal
+          product={stockProduct}
+          onClose={() => setStockProduct(null)}
+          onApply={() => setStockProduct(null)}
+        />
+      )}
+    </div>
+  );
+}

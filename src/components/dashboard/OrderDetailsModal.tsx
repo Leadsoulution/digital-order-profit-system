@@ -23,8 +23,8 @@ export default function OrderDetailsModal({
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>(tabs[0]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-10">
-      <div className="w-full max-w-lg rounded-xl bg-white shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 sm:px-4 sm:py-10">
+      <div className="flex h-full w-full flex-col bg-white shadow-2xl sm:h-auto sm:max-w-lg sm:rounded-xl">
         <div className="flex items-start justify-between border-b border-gray-100 px-5 py-4">
           <div className="flex items-start gap-2.5">
             <ClipboardList className="mt-0.5 h-4 w-4 text-gray-700" />
@@ -46,7 +46,7 @@ export default function OrderDetailsModal({
           </button>
         </div>
 
-        <div className="max-h-[70vh] space-y-4 overflow-y-auto px-5 py-4">
+        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4 sm:max-h-[70vh] sm:flex-none">
           <div className="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2.5">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gray-100 text-[10px] font-medium text-gray-400">
@@ -86,15 +86,15 @@ export default function OrderDetailsModal({
           </div>
 
           <div>
-            <div className="flex items-center gap-4 border-b border-gray-100">
+            <div className="grid grid-cols-2 gap-2 border-b border-gray-100 pb-2 sm:flex sm:items-center sm:gap-4 sm:gap-y-0 sm:pb-0">
               {tabs.map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`whitespace-nowrap border-b-2 pb-2 text-[12px] font-medium transition-colors ${
+                  className={`truncate rounded-md px-2 py-1.5 text-left text-[12px] font-medium transition-colors sm:rounded-none sm:border-b-2 sm:px-0 sm:py-0 sm:pb-2 sm:text-center ${
                     activeTab === tab
-                      ? "border-gray-900 text-gray-900"
-                      : "border-transparent text-gray-400 hover:text-gray-600"
+                      ? "bg-gray-100 text-gray-900 sm:bg-transparent sm:border-gray-900"
+                      : "text-gray-400 hover:bg-gray-50 hover:text-gray-600 sm:border-transparent sm:hover:bg-transparent"
                   }`}
                 >
                   {tab}
@@ -170,16 +170,16 @@ export default function OrderDetailsModal({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2.5 border-t border-gray-100 px-5 py-4">
+        <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 px-5 py-4 sm:flex-row sm:justify-end">
           <button
             onClick={onClose}
-            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50"
+            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50 sm:w-auto"
           >
             Annuler
           </button>
           <button
             onClick={onEdit}
-            className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-[13px] font-medium text-white hover:bg-blue-700"
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-[13px] font-medium text-white hover:bg-blue-700 sm:w-auto"
           >
             <Pencil className="h-3.5 w-3.5" />
             Modifier les details

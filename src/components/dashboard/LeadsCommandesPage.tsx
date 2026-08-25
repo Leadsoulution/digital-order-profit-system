@@ -171,7 +171,7 @@ export default function LeadsCommandesPage() {
   const selectedCount = selectedIds.size;
 
   return (
-    <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-4 lg:px-6 lg:py-5">
+    <div className="scrollbar-hide flex-1 overflow-y-auto bg-gray-50 px-4 py-4 lg:px-6 lg:py-5">
       <div className="mb-5 hidden items-start justify-between lg:flex">
         <div className="flex items-start gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-100">
@@ -595,7 +595,7 @@ export default function LeadsCommandesPage() {
                 </button>
                 <button
                   onClick={actions.onDelete}
-                  className="flex items-center justify-center gap-1.5 rounded-lg border border-red-200 py-2 text-[12.5px] font-medium text-red-600 hover:bg-red-50"
+                  className="flex items-center justify-center gap-1.5 rounded-lg bg-red-600 py-2 text-[12.5px] font-medium text-white hover:bg-red-700"
                 >
                   <Trash2 className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">Supprimer commande</span>
