@@ -53,7 +53,7 @@ const sections: NavSection[] = [
       { label: "Produits", icon: Package, href: "/products" },
       { label: "Media", icon: ImageIcon },
       { label: "Publicite", icon: Megaphone },
-      { label: "Integrations", icon: Puzzle },
+      { label: "Integrations", icon: Puzzle, href: "/integrations" },
     ],
   },
   {
