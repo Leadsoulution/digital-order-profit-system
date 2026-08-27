@@ -28,7 +28,7 @@ export default function MediaPickerModal({
     <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-10">
       <div className="w-full max-w-2xl rounded-xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-          <h2 className="text-[15px] font-semibold text-gray-900">
+          <h2 className="text-h2 font-semibold text-gray-900">
             Selectionner des medias
           </h2>
           <button

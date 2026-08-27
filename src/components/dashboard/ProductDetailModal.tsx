@@ -42,7 +42,7 @@ export default function ProductDetailModal({
               <Package className="h-4.5 w-4.5 text-gray-500" />
             </div>
             <div>
-              <h2 className="text-[15px] font-semibold text-gray-900">
+              <h2 className="text-h2 font-semibold text-gray-900">
                 {product.name}
               </h2>
               <p className="font-mono text-[12px] text-gray-400">{product.sku}</p>

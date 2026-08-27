@@ -69,7 +69,7 @@ export default function CreateCommandeModal({
           <div className="flex items-start gap-2.5">
             <ShoppingCart className="mt-0.5 h-4 w-4 text-gray-700" />
             <div>
-              <h2 className="text-[15px] font-semibold text-gray-900">
+              <h2 className="text-h2 font-semibold text-gray-900">
                 Creer une commande manuelle
               </h2>
               <p className="mt-0.5 max-w-sm text-[12.5px] text-gray-500">

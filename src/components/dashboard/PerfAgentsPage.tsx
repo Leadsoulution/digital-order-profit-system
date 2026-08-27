@@ -72,7 +72,7 @@ export default function PerfAgentsPage() {
             <Activity className="h-4 w-4 text-gray-600" />
           </div>
           <div>
-            <h1 className="text-[19px] font-semibold text-gray-900">
+            <h1 className="text-h1 font-semibold text-gray-900">
               Performance des agents
             </h1>
             <p className="max-w-md text-[13px] text-gray-500">

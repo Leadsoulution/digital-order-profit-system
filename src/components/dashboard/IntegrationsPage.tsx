@@ -296,7 +296,7 @@ export default function IntegrationsPage() {
             <Link2 className="h-4 w-4 text-gray-600" />
           </div>
           <div>
-            <h1 className="text-[19px] font-semibold text-gray-900">
+            <h1 className="text-h1 font-semibold text-gray-900">
               Integrations
             </h1>
             <p className="max-w-xl text-[13px] text-gray-500">

@@ -34,7 +34,7 @@ export default function ConnectIntegrationModal({
       <div className="flex h-full w-full flex-col bg-white shadow-2xl sm:h-auto sm:max-w-md sm:rounded-xl">
         <div className="flex items-start justify-between border-b border-gray-100 px-5 py-4">
           <div>
-            <h2 className="text-[15px] font-semibold text-gray-900">
+            <h2 className="text-h2 font-semibold text-gray-900">
               Connecter {integration.name}
             </h2>
             <p className="mt-0.5 max-w-sm text-[12.5px] text-gray-500">

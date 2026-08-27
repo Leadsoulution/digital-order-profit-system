@@ -23,7 +23,7 @@ export default function AssignModal({
           <div className="flex items-start gap-2.5">
             <UserPlus className="mt-0.5 h-4 w-4 text-gray-700" />
             <div>
-              <h2 className="text-[15px] font-semibold text-gray-900">
+              <h2 className="text-h2 font-semibold text-gray-900">
                 Assigner <span className="font-mono">{count}</span> commande{count > 1 ? "s" : ""}
               </h2>
               <p className="mt-0.5 text-[12.5px] text-gray-500">

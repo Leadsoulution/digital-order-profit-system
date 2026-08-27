@@ -10,6 +10,13 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-plus-jakarta-sans), system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-jetbrains-mono);
+
+  /* Typography scale — page title (h1), modal title (h2), card/section title (h3) */
+  --text-h1: 19px;
+  --text-h2: 15px;
+  --text-h3: 13.5px;
+  --text-body: 13px;
+  --text-small: 12px;
 }
 
 @media (prefers-color-scheme: dark) {
