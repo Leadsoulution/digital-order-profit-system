@@ -19,6 +19,8 @@ import {
   Wallet,
   UserCog,
   BarChart2,
+  Database,
+  Settings,
   LogOut,
   X,
 } from "lucide-react";
@@ -70,6 +72,8 @@ const sections: NavSection[] = [
       { label: "Finance", icon: Wallet, href: "/finance" },
       { label: "Utilisateurs", icon: UserCog, href: "/utilisateurs" },
       { label: "Rapports", icon: BarChart2 },
+      { label: "Donnees maitres", icon: Database },
+      { label: "Parametres", icon: Settings, href: "/parametres" },
     ],
   },
 ];
