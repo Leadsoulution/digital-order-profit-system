@@ -67,8 +67,8 @@ const sections: NavSection[] = [
   {
     title: "GESTION",
     items: [
-      { label: "Finance", icon: Wallet },
-      { label: "Utilisateurs", icon: UserCog },
+      { label: "Finance", icon: Wallet, href: "/finance" },
+      { label: "Utilisateurs", icon: UserCog, href: "/utilisateurs" },
       { label: "Rapports", icon: BarChart2 },
     ],
   },
