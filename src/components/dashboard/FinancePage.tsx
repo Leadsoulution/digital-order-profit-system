@@ -216,14 +216,147 @@ export default function FinancePage() {
       )}
 
       {activeTab === "depenses" && (
-        <div className="rounded-xl border border-dashed border-gray-200 bg-white py-16 text-center text-[13px] text-gray-400">
-          Aucune depense detaillee pour cette periode.
+        <div className="rounded-xl border border-gray-200 bg-white">
+          <div className="border-b border-gray-100 px-5 py-4">
+            <p className="text-h3 font-semibold text-gray-900">
+              Depenses par categorie
+            </p>
+            <p className="text-[12.5px] text-gray-500">
+              Repartition des sorties d&apos;argent sur la periode
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[600px] text-left">
+              <thead>
+                <tr className="border-b border-gray-100 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                  <th className="px-5 py-3">Categorie</th>
+                  <th className="px-3 py-3">Montant</th>
+                  <th className="px-3 py-3">Part du total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {expenseKpis
+                  .filter((kpi) => kpi.label !== "Total depenses")
+                  .map((kpi) => {
+                    const total =
+                      expenseKpis.find((k) => k.label === "Total depenses")?.value ?? 1;
+                    const share = Math.round((kpi.value / total) * 100);
+                    return (
+                      <tr
+                        key={kpi.label}
+                        className="border-b border-gray-50 text-[13px] text-gray-700 last:border-0"
+                      >
+                        <td className="px-5 py-3 font-medium text-gray-800">
+                          {kpi.label}
+                        </td>
+                        <td className="px-3 py-3 font-mono font-medium text-gray-900">
+                          {formatMad(kpi.value)}
+                        </td>
+                        <td className="px-3 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="h-1.5 w-24 overflow-hidden rounded-full bg-gray-100">
+                              <div
+                                className="h-full rounded-full bg-orange-400"
+                                style={{ width: `${share}%` }}
+                              />
+                            </div>
+                            <span className="font-mono text-[12px] text-gray-500">
+                              {share}%
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-gray-200 text-[13px] font-semibold text-gray-900">
+                  <td className="px-5 py-3">Total depenses</td>
+                  <td className="px-3 py-3 font-mono">
+                    {formatMad(
+                      expenseKpis.find((k) => k.label === "Total depenses")?.value ?? 0
+                    )}
+                  </td>
+                  <td className="px-3 py-3 font-mono">100%</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         </div>
       )}
 
       {activeTab === "rentabilite" && (
-        <div className="rounded-xl border border-dashed border-gray-200 bg-white py-16 text-center text-[13px] text-gray-400">
-          Aucune donnee de rentabilite pour cette periode.
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <p className="mb-4 text-h3 font-semibold text-gray-900">
+            Rentabilite de la periode
+          </p>
+          {(() => {
+            const revenu = financeKpis.find((k) => k.label === "Revenu total")?.value ?? 0;
+            const depenses =
+              expenseKpis.find((k) => k.label === "Total depenses")?.value ?? 0;
+            const profit = financeKpis.find((k) => k.label === "Profit estime")?.value ?? 0;
+            const marge = revenu > 0 ? Math.round((profit / revenu) * 100) : 0;
+            const revenuBar = 100;
+            const depensesBar = revenu > 0 ? Math.min(100, Math.round((depenses / revenu) * 100)) : 0;
+            return (
+              <>
+                <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div className="rounded-lg bg-emerald-50 p-3.5">
+                    <p className="text-[10.5px] font-semibold uppercase tracking-wide text-emerald-600">
+                      Revenu total
+                    </p>
+                    <p className="font-mono text-[17px] font-semibold text-gray-900">
+                      {formatMad(revenu)}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-red-50 p-3.5">
+                    <p className="text-[10.5px] font-semibold uppercase tracking-wide text-red-600">
+                      Total depenses
+                    </p>
+                    <p className="font-mono text-[17px] font-semibold text-gray-900">
+                      {formatMad(depenses)}
+                    </p>
+                  </div>
+                  <div className={`rounded-lg p-3.5 ${profit < 0 ? "bg-red-50" : "bg-emerald-50"}`}>
+                    <p
+                      className={`text-[10.5px] font-semibold uppercase tracking-wide ${
+                        profit < 0 ? "text-red-600" : "text-emerald-600"
+                      }`}
+                    >
+                      Profit net &middot; marge {marge}%
+                    </p>
+                    <p
+                      className={`font-mono text-[17px] font-semibold ${
+                        profit < 0 ? "text-red-600" : "text-gray-900"
+                      }`}
+                    >
+                      {formatMad(profit)}
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div>
+                    <div className="mb-1 flex items-center justify-between text-[11.5px] text-gray-500">
+                      <span>Revenu</span>
+                      <span className="font-mono">{formatMad(revenu)}</span>
+                    </div>
+                    <div className="h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
+                      <div className="h-full rounded-full bg-emerald-500" style={{ width: `${revenuBar}%` }} />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mb-1 flex items-center justify-between text-[11.5px] text-gray-500">
+                      <span>Depenses</span>
+                      <span className="font-mono">{formatMad(depenses)}</span>
+                    </div>
+                    <div className="h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
+                      <div className="h-full rounded-full bg-red-500" style={{ width: `${depensesBar}%` }} />
+                    </div>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
         </div>
       )}
 

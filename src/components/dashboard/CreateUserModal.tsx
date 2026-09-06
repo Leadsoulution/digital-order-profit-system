@@ -43,8 +43,8 @@ export default function CreateUserModal({ onClose }: { onClose: () => void }) {
             </label>
             <input
               type="email"
-              defaultValue="admin@lead2door.com"
-              className="w-full rounded-lg border border-blue-200 bg-blue-50/40 px-3 py-2 text-[13px] text-gray-800 focus:border-blue-400 focus:outline-none"
+              placeholder="Ex: nom.prenom@lead2door.com"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-[13px] text-gray-800 placeholder:text-gray-400 focus:border-blue-400 focus:outline-none"
             />
           </div>
 
@@ -65,8 +65,8 @@ export default function CreateUserModal({ onClose }: { onClose: () => void }) {
             </label>
             <input
               type="password"
-              defaultValue="temporaire123"
-              className="w-full rounded-lg border border-gray-200 bg-blue-50/40 px-3 py-2 text-[13px] text-gray-800 focus:border-blue-400 focus:outline-none"
+              placeholder="Minimum 8 caracteres"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-[13px] text-gray-800 placeholder:text-gray-400 focus:border-blue-400 focus:outline-none"
             />
           </div>
 

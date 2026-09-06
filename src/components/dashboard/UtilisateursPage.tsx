@@ -20,13 +20,18 @@ import {
 import Sparkline from "./Sparkline";
 import SelectDropdown from "./SelectDropdown";
 import CreateUserModal from "./CreateUserModal";
-import { teamMembers, roleOptions, statusOptions } from "./users-data";
+import UserDetailModal from "./UserDetailModal";
+import EditUserModal from "./EditUserModal";
+import { teamMembers as initialTeamMembers, roleOptions, statusOptions, type TeamMember } from "./users-data";
 
 export default function UtilisateursPage() {
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(initialTeamMembers);
   const [searchQuery, setSearchQuery] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [detailMember, setDetailMember] = useState<TeamMember | null>(null);
+  const [editMember, setEditMember] = useState<TeamMember | null>(null);
 
   const query = searchQuery.trim().toLowerCase();
   const visibleMembers = query
@@ -50,6 +55,11 @@ export default function UtilisateursPage() {
     agentRates.reduce((sum, r) => sum + r, 0) / agentRates.length
   );
 
+  function saveMember(updated: TeamMember) {
+    setTeamMembers((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
+    setEditMember(null);
+  }
+
   return (
     <div className="scrollbar-hide flex-1 overflow-y-auto bg-gray-50 px-4 py-4 lg:px-6 lg:py-5">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -62,7 +72,7 @@ export default function UtilisateursPage() {
               Utilisateurs
             </h1>
             <p className="text-[13px] text-gray-500">
-              <span className="font-mono">{agentsCount}</span> membres de l&apos;equipe
+              <span className="font-mono">{totalUsers}</span> membres de l&apos;equipe
             </p>
           </div>
         </div>
@@ -309,14 +319,20 @@ export default function UtilisateursPage() {
                     {openMenuId === member.id && (
                       <div className="absolute right-3 top-full z-20 mt-1 w-48 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
                         <button
-                          onClick={() => setOpenMenuId(null)}
+                          onClick={() => {
+                            setDetailMember(member);
+                            setOpenMenuId(null);
+                          }}
                           className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-[13px] text-gray-700 hover:bg-gray-50"
                         >
                           <Eye className="h-3.5 w-3.5 text-gray-400" />
                           Voir details
                         </button>
                         <button
-                          onClick={() => setOpenMenuId(null)}
+                          onClick={() => {
+                            setEditMember(member);
+                            setOpenMenuId(null);
+                          }}
                           className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-[13px] text-gray-700 hover:bg-gray-50"
                         >
                           <Pencil className="h-3.5 w-3.5 text-gray-400" />
@@ -324,7 +340,12 @@ export default function UtilisateursPage() {
                         </button>
                         <div className="mt-1 border-t border-gray-100 pt-1">
                           <button
-                            onClick={() => setOpenMenuId(null)}
+                            onClick={() => {
+                              setTeamMembers((prev) =>
+                                prev.filter((m) => m.id !== member.id)
+                              );
+                              setOpenMenuId(null);
+                            }}
                             className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-[13px] text-red-600 hover:bg-red-50"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -342,6 +363,23 @@ export default function UtilisateursPage() {
       </div>
 
       {createOpen && <CreateUserModal onClose={() => setCreateOpen(false)} />}
+      {detailMember && (
+        <UserDetailModal
+          member={detailMember}
+          onClose={() => setDetailMember(null)}
+          onEdit={() => {
+            setEditMember(detailMember);
+            setDetailMember(null);
+          }}
+        />
+      )}
+      {editMember && (
+        <EditUserModal
+          member={editMember}
+          onClose={() => setEditMember(null)}
+          onSave={saveMember}
+        />
+      )}
     </div>
   );
 }
