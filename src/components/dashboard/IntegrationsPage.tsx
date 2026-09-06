@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -49,6 +49,18 @@ function PlatformCard({
   onConnect: (integration: Integration) => void;
 }) {
   const isAds = integration.category === "ads";
+  const [syncState, setSyncState] = useState<"idle" | "syncing" | "done">("idle");
+
+  useEffect(() => {
+    if (syncState !== "done") return;
+    const timer = setTimeout(() => setSyncState("idle"), 2000);
+    return () => clearTimeout(timer);
+  }, [syncState]);
+
+  function runSync() {
+    setSyncState("syncing");
+    setTimeout(() => setSyncState("done"), 800);
+  }
   const rightLabel = integration.activeCount
     ? `${integration.activeCount} actives`
     : integration.connectedAt
@@ -116,14 +128,30 @@ function PlatformCard({
         {isAds ? (
           <>
             <button
-              onClick={() => onConnect(integration)}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-gray-900 px-3 py-2 text-[12.5px] font-medium text-white hover:bg-gray-800"
+              onClick={runSync}
+              disabled={syncState === "syncing"}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[12.5px] font-medium text-white ${
+                syncState === "done"
+                  ? "bg-emerald-600"
+                  : "bg-gray-900 hover:bg-gray-800"
+              } disabled:opacity-70`}
             >
-              <RefreshCw className="h-3.5 w-3.5" />
-              Synchroniser les campagnes
+              {syncState === "done" ? (
+                <CheckCircle2 className="h-3.5 w-3.5" />
+              ) : (
+                <RefreshCw
+                  className={`h-3.5 w-3.5 ${syncState === "syncing" ? "animate-spin" : ""}`}
+                />
+              )}
+              {syncState === "syncing"
+                ? "Synchronisation..."
+                : syncState === "done"
+                ? "Synchronise"
+                : "Synchroniser les campagnes"}
             </button>
             <button
               onClick={() => onConnect(integration)}
+              title="Modifier la connexion"
               className="shrink-0 rounded-lg border border-gray-300 p-2 text-gray-500 hover:bg-gray-50"
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />

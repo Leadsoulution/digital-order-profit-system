@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Ban,
   CheckCircle2,
@@ -416,7 +417,11 @@ export default function ParametresPage() {
             <p className="text-[12.5px] text-gray-500">
               Utilisez cet onglet pour les identifiants et reglages
               d&apos;integration par defaut de l&apos;espace. La connexion
-              et la sante sont gerees dans /admin/integrations.
+              et la sante sont gerees dans{" "}
+              <Link href="/integrations" className="font-medium text-blue-600 hover:underline">
+                Integrations
+              </Link>
+              .
             </p>
           </div>
 

@@ -5,11 +5,15 @@ import { CheckCircle2, ChevronRight, X } from "lucide-react";
 import Toggle from "./Toggle";
 import type { Integration } from "./integrations-data";
 
-const platformCopy: Record<string, { blurb: string; urlLabel: string; urlHint: string }> = {
+const platformCopy: Record<
+  string,
+  { blurb: string; urlLabel: string; urlHint: string; keyHint: string }
+> = {
   woocommerce: {
     blurb: "Connectez votre site WordPress/WooCommerce pour centraliser vos commandes",
     urlLabel: "URL du site WordPress",
     urlHint: "L'URL de votre boutique WooCommerce",
+    keyHint: "WooCommerce > Reglages > Avance > API REST",
   },
 };
 
@@ -27,6 +31,7 @@ export default function ConnectIntegrationModal({
     blurb: `Connectez ${integration.name} pour synchroniser vos donnees automatiquement`,
     urlLabel: "URL de connexion",
     urlHint: `L'URL de votre compte ${integration.name}`,
+    keyHint: `Tableau de bord ${integration.name} > Parametres API`,
   };
 
   return (
@@ -67,6 +72,8 @@ export default function ConnectIntegrationModal({
             </label>
             <input
               type="text"
+              name={`integration-url-${integration.id}`}
+              autoComplete="off"
               placeholder="https://..."
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-[13px] text-gray-800 placeholder:text-gray-400 focus:border-blue-400 focus:outline-none"
             />
@@ -80,12 +87,12 @@ export default function ConnectIntegrationModal({
               </label>
               <input
                 type="password"
+                name={`integration-key-${integration.id}`}
+                autoComplete="new-password"
                 placeholder="ck_XXXX..."
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-[13px] text-gray-800 placeholder:text-gray-400 focus:border-blue-400 focus:outline-none"
               />
-              <p className="mt-1 text-[11px] text-gray-400">
-                WooCommerce &gt; Reglages &gt; Avance &gt; API REST
-              </p>
+              <p className="mt-1 text-[11px] text-gray-400">{copy.keyHint}</p>
             </div>
             <div>
               <label className="mb-1 block text-[12.5px] text-gray-600">
@@ -93,6 +100,8 @@ export default function ConnectIntegrationModal({
               </label>
               <input
                 type="password"
+                name={`integration-secret-${integration.id}`}
+                autoComplete="new-password"
                 placeholder="cs_XXXX..."
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-[13px] text-gray-800 placeholder:text-gray-400 focus:border-blue-400 focus:outline-none"
               />
