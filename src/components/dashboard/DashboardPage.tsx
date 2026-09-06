@@ -34,9 +34,13 @@ import {
   adPerformance,
   leadSourceHealth,
   carrierHealth,
+  periodScale,
+  scaleCount,
+  formatKpiValue,
 } from "./dashboard-data";
 import { agentPerformance } from "./confirmation-data";
 import { leads } from "./leads-data";
+import AssignModal from "./AssignModal";
 
 const dateRanges = [
   "Aujourd'hui",
@@ -72,20 +76,64 @@ const todayLabel = new Date().toLocaleDateString("fr-FR", {
   year: "numeric",
 });
 
+const fullDateFmt = (d: Date) =>
+  d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+
 export default function DashboardPage() {
   const [activeRange, setActiveRange] = useState("Maximum");
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [customRangeLabel, setCustomRangeLabel] = useState<string | null>(null);
+  const [customRange, setCustomRange] = useState<{ start: Date; end: Date } | null>(null);
   const [sourceTab, setSourceTab] = useState<"leads" | "carriers">("leads");
   const [panelScope, setPanelScope] = useState<"periode" | "direct">("periode");
+  const [assignOpen, setAssignOpen] = useState(false);
 
   function applyCustomRange(start: Date, end: Date) {
     const fmt = (d: Date) =>
       d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
     setCustomRangeLabel(`${fmt(start)} - ${fmt(end)}`);
+    setCustomRange({ start, end });
     setActiveRange("Personnalisee");
     setCalendarOpen(false);
   }
+
+  const customDays = customRange
+    ? Math.max(
+        1,
+        Math.round(
+          (customRange.end.getTime() - customRange.start.getTime()) / 86400000
+        ) + 1
+      )
+    : 1;
+  const customScale = Math.min(1, Math.max(0.01, customDays / 365));
+  const rangeScale =
+    activeRange === "Personnalisee" ? customScale : periodScale[activeRange] ?? 1;
+  const scale = panelScope === "direct" ? periodScale["Aujourd'hui"] : rangeScale;
+
+  const periodeActiveLabel = (() => {
+    const today = new Date();
+    if (activeRange === "Aujourd'hui") return fullDateFmt(today);
+    if (activeRange === "Hier") {
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      return fullDateFmt(yesterday);
+    }
+    if (activeRange === "7 derniers jours") {
+      const start = new Date(today);
+      start.setDate(today.getDate() - 6);
+      return `${fullDateFmt(start)} – ${fullDateFmt(today)}`;
+    }
+    if (activeRange === "Ce mois-ci") {
+      const start = new Date(today.getFullYear(), today.getMonth(), 1);
+      return `${fullDateFmt(start)} – ${fullDateFmt(today)}`;
+    }
+    if (activeRange === "Personnalisee" && customRange) {
+      return `${fullDateFmt(customRange.start)} – ${fullDateFmt(customRange.end)}`;
+    }
+    return "25 aout 2025 – 25 aout 2026";
+  })();
+
+  const pendingLeads = leads.filter((l) => l.status === "Nouveau");
 
   return (
     <div className="scrollbar-hide flex-1 overflow-y-auto bg-gray-50 px-4 py-4 lg:px-6 lg:py-5">
@@ -138,7 +186,11 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
-          <button className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50 lg:w-auto">
+          <button
+            disabled
+            title="Bientot disponible"
+            className="flex w-full cursor-not-allowed items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-[13px] font-medium text-gray-400 opacity-60 lg:w-auto"
+          >
             <FileBarChart className="h-3.5 w-3.5" />
             Rapport complet
           </button>
@@ -153,7 +205,7 @@ export default function DashboardPage() {
               PERIODE ACTIVE
             </p>
             <p className="font-mono text-[13px] font-medium text-gray-800">
-              25 aout 2025 &ndash; 25 aout 2026
+              {periodeActiveLabel}
             </p>
           </div>
         </div>
@@ -193,10 +245,14 @@ export default function DashboardPage() {
         <div className="space-y-2.5">
           <div className="flex flex-col gap-1 rounded-lg border border-amber-100 bg-amber-50 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
             <span className="flex items-center gap-2 text-[12.5px] text-amber-700">
-              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />8 leads en
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+              <span className="font-mono">{pendingLeads.length}</span> leads en
               attente de premiere confirmation
             </span>
-            <button className="shrink-0 text-left text-[12px] font-medium text-amber-700 hover:underline sm:text-right">
+            <button
+              onClick={() => setAssignOpen(true)}
+              className="shrink-0 text-left text-[12px] font-medium text-amber-700 hover:underline sm:text-right"
+            >
               Assigner un agent
             </button>
           </div>
@@ -205,9 +261,12 @@ export default function DashboardPage() {
               <Info className="h-3.5 w-3.5 shrink-0" />1 integration(s)
               necessite(nt) une action
             </span>
-            <button className="shrink-0 text-left text-[12px] font-medium text-blue-700 hover:underline sm:text-right">
+            <Link
+              href="/integrations"
+              className="shrink-0 text-left text-[12px] font-medium text-blue-700 hover:underline sm:text-right"
+            >
               Acceder aux integrations
-            </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -244,7 +303,7 @@ export default function DashboardPage() {
               </div>
               <div className="mb-1 flex items-baseline gap-1.5">
                 <p className="truncate font-mono text-[18px] font-semibold text-gray-900">
-                  {kpi.value}
+                  {formatKpiValue(kpi, scale)}
                 </p>
                 {kpi.subtitle && (
                   <span className="shrink-0 text-[11px] text-gray-400">
@@ -322,7 +381,7 @@ export default function DashboardPage() {
                   <div className="w-16 shrink-0 text-right">
                     <p className="font-mono text-[11px] text-gray-400">{stage.percent}%</p>
                     <p className="font-mono text-[12.5px] font-semibold text-gray-800">
-                      {stage.value.toLocaleString("fr-FR")}
+                      {scaleCount(stage.value, scale).toLocaleString("fr-FR")}
                     </p>
                   </div>
                 </div>
@@ -363,7 +422,7 @@ export default function DashboardPage() {
                   <span className="flex shrink-0 items-center gap-2">
                     <span className="font-mono text-gray-400">{slice.percent}%</span>
                     <span className="w-14 text-right font-mono font-medium text-gray-700">
-                      {slice.value.toLocaleString("fr-FR")}
+                      {scaleCount(slice.value, scale).toLocaleString("fr-FR")}
                     </span>
                   </span>
                 </li>
@@ -475,7 +534,7 @@ export default function DashboardPage() {
                   {product.name}
                 </p>
                 <span className="shrink-0 font-mono text-[12px] font-semibold text-gray-700">
-                  {product.count.toLocaleString("fr-FR")}
+                  {scaleCount(product.count, scale).toLocaleString("fr-FR")}
                 </span>
               </div>
             ))}
@@ -549,7 +608,11 @@ export default function DashboardPage() {
                       )}
                       {source.name}
                     </span>
-                    <button className="flex items-center gap-1 text-[11.5px] text-blue-600 hover:underline">
+                    <button
+                      disabled
+                      title="Bientot disponible"
+                      className="flex cursor-not-allowed items-center gap-1 text-[11.5px] text-gray-400"
+                    >
                       <RefreshCw className="h-3 w-3" />
                       Voir logs
                     </button>
@@ -637,6 +700,14 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
+
+      {assignOpen && (
+        <AssignModal
+          count={pendingLeads.length}
+          onClose={() => setAssignOpen(false)}
+          onApply={() => setAssignOpen(false)}
+        />
+      )}
     </div>
   );
 }

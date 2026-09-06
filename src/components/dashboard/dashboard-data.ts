@@ -1,6 +1,7 @@
 export type KpiCard = {
   label: string;
-  value: string;
+  value: number;
+  unit?: "MAD";
   subtitle?: string;
   trend: string;
   trendUp: boolean;
@@ -10,14 +11,14 @@ export type KpiCard = {
 export const kpiCards: KpiCard[] = [
   {
     label: "Leads de la periode",
-    value: "48745",
+    value: 48745,
     trend: "-100%",
     trendUp: false,
     spark: [8, 6, 7, 5, 6, 8, 55],
   },
   {
     label: "Confirmes",
-    value: "31328",
+    value: 31328,
     subtitle: "64%",
     trend: "-100%",
     trendUp: false,
@@ -25,7 +26,7 @@ export const kpiCards: KpiCard[] = [
   },
   {
     label: "En attente",
-    value: "6325",
+    value: 6325,
     subtitle: "a traiter",
     trend: "-100%",
     trendUp: false,
@@ -33,21 +34,21 @@ export const kpiCards: KpiCard[] = [
   },
   {
     label: "Pas de reponse",
-    value: "0",
+    value: 0,
     trend: "+0%",
     trendUp: false,
     spark: [0, 0, 0, 0, 0, 0, 0],
   },
   {
     label: "Expedies",
-    value: "5455",
+    value: 5455,
     trend: "-100%",
     trendUp: false,
     spark: [3, 2, 3, 2, 4, 6, 18],
   },
   {
     label: "Livres",
-    value: "22869",
+    value: 22869,
     subtitle: "76% livres",
     trend: "-100%",
     trendUp: false,
@@ -55,20 +56,45 @@ export const kpiCards: KpiCard[] = [
   },
   {
     label: "COGS collecte",
-    value: "19.485.231,34 MAD",
+    value: 19485231.34,
+    unit: "MAD",
     trend: "-100%",
     trendUp: false,
     spark: [6, 5, 7, 5, 8, 12, 40],
   },
   {
     label: "Profit net estime",
-    value: "-29.278.287 MAD",
+    value: -29278287,
+    unit: "MAD",
     subtitle: "marge nette",
     trend: "+100%",
     trendUp: true,
     spark: [2, 3, 3, 4, 5, 6, 8],
   },
 ];
+
+export const periodScale: Record<string, number> = {
+  "Aujourd'hui": 0.015,
+  Hier: 0.018,
+  "7 derniers jours": 0.11,
+  "Ce mois-ci": 0.32,
+  Maximum: 1,
+};
+
+export function scaleCount(value: number, scale: number) {
+  return Math.round(value * scale);
+}
+
+export function formatKpiValue(kpi: { value: number; unit?: "MAD" }, scale: number) {
+  const scaled = kpi.value * scale;
+  const hasDecimals = !Number.isInteger(kpi.value);
+  const sign = scaled < 0 ? "-" : "";
+  const formatted = Math.abs(scaled).toLocaleString("fr-FR", {
+    maximumFractionDigits: hasDecimals ? 2 : 0,
+    minimumFractionDigits: hasDecimals ? 2 : 0,
+  });
+  return kpi.unit ? `${sign}${formatted} ${kpi.unit}` : `${sign}${formatted}`;
+}
 
 export type FunnelStage = {
   label: string;

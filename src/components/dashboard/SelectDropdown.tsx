@@ -131,7 +131,7 @@ export default function SelectDropdown({
           )}
 
           <div className="max-h-56 overflow-y-auto py-1">
-            {!multi && (
+            {!multi && value === undefined && (
               <button
                 onClick={() => selectOption(null)}
                 className={`flex w-full items-center gap-2 px-3 py-2 text-left text-[12.5px] ${
