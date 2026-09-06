@@ -206,16 +206,16 @@ export const sourceBadgeStyles: Record<LeadSource, string> = {
 };
 
 export const statusBadgeStyles: Record<LeadStatus, string> = {
-  Nouveau: "bg-sky-50 text-sky-600",
-  Assigne: "bg-blue-50 text-blue-600",
-  "En cours": "bg-indigo-50 text-indigo-600",
-  Confirme: "bg-green-50 text-green-700",
-  Rappel: "bg-orange-50 text-orange-600",
-  "Pas de reponse": "bg-gray-100 text-gray-500",
-  "Numero incorrect": "bg-red-100 text-red-700",
-  Annule: "bg-red-50 text-red-600",
-  Duplique: "bg-yellow-50 text-yellow-700",
-  "A revoir": "bg-purple-50 text-purple-600",
+  Nouveau: "bg-sky-500 text-white",
+  Assigne: "bg-blue-600 text-white",
+  "En cours": "bg-indigo-500 text-white",
+  Confirme: "bg-emerald-600 text-white",
+  Rappel: "bg-orange-500 text-white",
+  "Pas de reponse": "bg-gray-500 text-white",
+  "Numero incorrect": "bg-rose-500 text-white",
+  Annule: "bg-red-600 text-white",
+  Duplique: "bg-amber-600 text-white",
+  "A revoir": "bg-purple-500 text-white",
   "Faux / spam": "bg-red-600 text-white",
 };
 
