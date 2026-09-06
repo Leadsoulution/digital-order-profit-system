@@ -117,17 +117,17 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         </button>
       </div>
 
-      <nav className="scrollbar-hide flex-1 overflow-y-auto px-3 pb-4">
+      <nav className="sidebar-scroll flex-1 overflow-y-auto px-3 pb-4">
         {sections.map((section) => (
-          <div key={section.title} className="mb-5">
-            <p className="mb-1.5 px-3 text-[10.5px] font-semibold tracking-wider text-slate-500">
+          <div key={section.title} className="mb-4">
+            <p className="mb-1 px-3 text-[10.5px] font-semibold tracking-wider text-slate-500">
               {section.title}
             </p>
             <ul className="space-y-0.5">
               {section.items.map((item) => {
                 const Icon = item.icon;
                 const active = item.href === pathname;
-                const className = `flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] transition-colors ${
+                const className = `flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-[13px] transition-colors ${
                   active
                     ? "bg-blue-600 text-white font-medium"
                     : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
