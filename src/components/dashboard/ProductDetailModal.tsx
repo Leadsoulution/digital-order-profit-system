@@ -71,7 +71,11 @@ export default function ProductDetailModal({
             >
               <Boxes className="h-4 w-4" />
             </button>
-            <button className="rounded-lg border border-gray-200 p-2 text-gray-500 hover:bg-gray-50">
+            <button
+              disabled
+              title="Bientot disponible"
+              className="cursor-not-allowed rounded-lg border border-gray-200 p-2 text-gray-300"
+            >
               <MoreVertical className="h-4 w-4" />
             </button>
             <button

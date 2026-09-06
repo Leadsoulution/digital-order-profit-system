@@ -198,6 +198,41 @@ export default function LeadsCommandesPage() {
     setModal(null);
   }
 
+  function exportCsv() {
+    const headers = [
+      "Reference",
+      "Produit",
+      "Client",
+      "Telephone",
+      "Source",
+      "Assigne a",
+      "Montant",
+      "Statut",
+      "Date",
+    ];
+    const rows = visibleLeads.map((lead) => [
+      lead.reference,
+      lead.productName,
+      lead.client,
+      lead.phone,
+      lead.source,
+      lead.assignedTo,
+      lead.amount,
+      lead.status,
+      lead.date,
+    ]);
+    const csv = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([`﻿${csv}`], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `leads-commandes-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function getRowActions(lead: Lead) {
     return {
       onViewDetails: () => setModal({ type: "details", lead }),
@@ -237,11 +272,18 @@ export default function LeadsCommandesPage() {
         </div>
 
         <div className="flex items-center gap-2.5">
-          <button className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50">
+          <button
+            onClick={exportCsv}
+            className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50"
+          >
             <Download className="h-3.5 w-3.5" />
             Exporter
           </button>
-          <button className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50">
+          <button
+            disabled
+            title="Bientot disponible"
+            className="flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-[13px] font-medium text-gray-400 opacity-60"
+          >
             <Upload className="h-3.5 w-3.5" />
             Importer Excel
           </button>
@@ -534,7 +576,7 @@ export default function LeadsCommandesPage() {
                   </td>
                   <td className="px-3 py-3">
                     <div className="flex items-center gap-1.5">
-                      <p className="font-medium text-blue-600">{lead.client}</p>
+                      <p className="font-medium text-gray-800">{lead.client}</p>
                       {lead.itemCount && lead.itemCount > 1 && (
                         <span className="flex items-center gap-0.5 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10.5px] font-medium text-gray-500">
                           <Package className="h-2.5 w-2.5" />

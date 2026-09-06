@@ -156,6 +156,22 @@ export default function ParametresPage() {
   const [timezone, setTimezone] = useState(timezoneOptions[0]);
   const [language, setLanguage] = useState(languageOptions[0]);
   const [mediaStorage, setMediaStorage] = useState<"local" | "s3">("local");
+  const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
+  const [leadSyncState, setLeadSyncState] = useState<"idle" | "syncing" | "done">("idle");
+  const [shippingSyncState, setShippingSyncState] = useState<"idle" | "syncing" | "done">(
+    "idle"
+  );
+
+  function handleSave() {
+    setSaveState("saved");
+    setTimeout(() => setSaveState("idle"), 2000);
+  }
+
+  function runStatusSync(setter: (s: "idle" | "syncing" | "done") => void) {
+    setter("syncing");
+    setTimeout(() => setter("done"), 800);
+    setTimeout(() => setter("idle"), 2600);
+  }
 
   const leadActiveCount = Object.values(leadActive).filter(Boolean).length;
   const shippingActiveCount = Object.values(shippingActive).filter(Boolean).length;
@@ -177,9 +193,14 @@ export default function ParametresPage() {
           </div>
         </div>
 
-        <button className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-gray-900 px-3.5 py-2 text-[13px] font-medium text-white hover:bg-gray-800 sm:w-auto">
+        <button
+          onClick={handleSave}
+          className={`flex w-full items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-[13px] font-medium text-white sm:w-auto ${
+            saveState === "saved" ? "bg-emerald-600" : "bg-gray-900 hover:bg-gray-800"
+          }`}
+        >
           <Save className="h-3.5 w-3.5" />
-          Enregistrer
+          {saveState === "saved" ? "Enregistre" : "Enregistrer"}
         </button>
       </div>
 
@@ -326,9 +347,21 @@ export default function ParametresPage() {
                   <span className="font-mono">{leadStatuses.length}</span> statuts
                 </p>
               </div>
-              <button className="flex items-center justify-center gap-1.5 rounded-lg bg-gray-900 px-3 py-1.5 text-[12.5px] font-medium text-white hover:bg-gray-800">
-                <RefreshCw className="h-3.5 w-3.5" />
-                Synchroniser les statuts leads
+              <button
+                onClick={() => runStatusSync(setLeadSyncState)}
+                disabled={leadSyncState === "syncing"}
+                className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-[12.5px] font-medium text-white disabled:opacity-70 ${
+                  leadSyncState === "done" ? "bg-emerald-600" : "bg-gray-900 hover:bg-gray-800"
+                }`}
+              >
+                <RefreshCw
+                  className={`h-3.5 w-3.5 ${leadSyncState === "syncing" ? "animate-spin" : ""}`}
+                />
+                {leadSyncState === "syncing"
+                  ? "Synchronisation..."
+                  : leadSyncState === "done"
+                  ? "Synchronise"
+                  : "Synchroniser les statuts leads"}
               </button>
             </div>
             <div>
@@ -359,9 +392,23 @@ export default function ParametresPage() {
                   <span className="font-mono">{shippingStatuses.length}</span> statuts
                 </p>
               </div>
-              <button className="flex items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-[12.5px] font-medium text-gray-700 hover:bg-gray-50">
-                <RefreshCw className="h-3.5 w-3.5" />
-                Synchroniser les statuts expedition
+              <button
+                onClick={() => runStatusSync(setShippingSyncState)}
+                disabled={shippingSyncState === "syncing"}
+                className={`flex items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12.5px] font-medium disabled:opacity-70 ${
+                  shippingSyncState === "done"
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <RefreshCw
+                  className={`h-3.5 w-3.5 ${shippingSyncState === "syncing" ? "animate-spin" : ""}`}
+                />
+                {shippingSyncState === "syncing"
+                  ? "Synchronisation..."
+                  : shippingSyncState === "done"
+                  ? "Synchronise"
+                  : "Synchroniser les statuts expedition"}
               </button>
             </div>
             <div>
