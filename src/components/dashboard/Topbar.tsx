@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Menu,
   Search,
@@ -53,6 +54,7 @@ function SearchResultsPanel({
 }
 
 export default function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -71,8 +73,10 @@ export default function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   const showResults = focused && results.length > 0;
 
   function selectResult(lead: Lead) {
-    setQuery(lead.reference);
+    setQuery("");
     setFocused(false);
+    setMobileSearchOpen(false);
+    router.push(`/?lead=${lead.id}`);
   }
 
   return (

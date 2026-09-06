@@ -21,16 +21,19 @@ import {
 } from "lucide-react";
 import SelectDropdown from "./SelectDropdown";
 import CreateFournisseurModal from "./CreateFournisseurModal";
-import { suppliers } from "./fournisseurs-data";
+import SupplierDetailModal from "./SupplierDetailModal";
+import { suppliers as initialSuppliers, type Supplier } from "./fournisseurs-data";
 
 const rowsPerPageOptions = ["10", "25", "50"];
 
 export default function FournisseursPage() {
+  const [suppliers, setSuppliers] = useState<Supplier[]>(initialSuppliers);
   const [searchQuery, setSearchQuery] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(rowsPerPageOptions[0]);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [detailSupplier, setDetailSupplier] = useState<Supplier | null>(null);
 
   const query = searchQuery.trim().toLowerCase();
   const visibleSuppliers = query
@@ -221,7 +224,8 @@ export default function FournisseursPage() {
               {visibleSuppliers.map((supplier) => (
                 <tr
                   key={supplier.id}
-                  className="border-b border-gray-50 text-[13px] text-gray-700 last:border-0 hover:bg-gray-50/60"
+                  onClick={() => setDetailSupplier(supplier)}
+                  className="cursor-pointer border-b border-gray-50 text-[13px] text-gray-700 last:border-0 hover:bg-gray-50/60"
                 >
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-2.5">
@@ -274,29 +278,39 @@ export default function FournisseursPage() {
                     {openMenuId === supplier.id && (
                       <div className="absolute right-3 top-full z-20 mt-1 w-48 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
                         <button
-                          onClick={() => setOpenMenuId(null)}
+                          onClick={() => {
+                            setDetailSupplier(supplier);
+                            setOpenMenuId(null);
+                          }}
                           className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-[13px] text-gray-700 hover:bg-gray-50"
                         >
                           <Eye className="h-3.5 w-3.5 text-gray-400" />
                           Voir details
                         </button>
                         <button
-                          onClick={() => setOpenMenuId(null)}
-                          className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-[13px] text-gray-700 hover:bg-gray-50"
+                          disabled
+                          title="Bientot disponible"
+                          className="flex w-full cursor-not-allowed items-center gap-2.5 px-3 py-1.5 text-left text-[13px] text-gray-300"
                         >
-                          <Pencil className="h-3.5 w-3.5 text-gray-400" />
+                          <Pencil className="h-3.5 w-3.5" />
                           Modifier
                         </button>
-                        <button
+                        <a
+                          href={`tel:${supplier.phone}`}
                           onClick={() => setOpenMenuId(null)}
                           className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-[13px] text-gray-700 hover:bg-gray-50"
                         >
                           <Phone className="h-3.5 w-3.5 text-gray-400" />
                           Appeler
-                        </button>
+                        </a>
                         <div className="mt-1 border-t border-gray-100 pt-1">
                           <button
-                            onClick={() => setOpenMenuId(null)}
+                            onClick={() => {
+                              setSuppliers((prev) =>
+                                prev.filter((s) => s.id !== supplier.id)
+                              );
+                              setOpenMenuId(null);
+                            }}
                             className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-[13px] text-red-600 hover:bg-red-50"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -367,6 +381,12 @@ export default function FournisseursPage() {
 
       {createOpen && (
         <CreateFournisseurModal onClose={() => setCreateOpen(false)} />
+      )}
+      {detailSupplier && (
+        <SupplierDetailModal
+          supplier={detailSupplier}
+          onClose={() => setDetailSupplier(null)}
+        />
       )}
     </div>
   );

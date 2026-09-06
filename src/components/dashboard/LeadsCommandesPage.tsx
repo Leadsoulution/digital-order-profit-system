@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ShoppingCart,
   Download,
@@ -98,13 +99,25 @@ type ModalState =
   | null;
 
 export default function LeadsCommandesPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [leadsState, setLeadsState] = useState<Lead[]>(initialLeads);
   const [activeTab, setActiveTab] = useState("Tous");
   const [activeRange, setActiveRange] = useState("Tout");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [modal, setModal] = useState<ModalState>(null);
+  const [modal, setModal] = useState<ModalState>(() => {
+    const leadId = searchParams.get("lead");
+    const lead = leadId ? initialLeads.find((l) => l.id === leadId) : undefined;
+    return lead ? { type: "details", lead } : null;
+  });
+
+  useEffect(() => {
+    if (searchParams.get("lead")) {
+      router.replace("/");
+    }
+  }, [searchParams, router]);
 
   const dynamicTabs = tabs.map((tab) => ({
     ...tab,

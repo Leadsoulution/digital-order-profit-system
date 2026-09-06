@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
 import Topbar from "@/components/dashboard/Topbar";
 import LeadsCommandesPage from "@/components/dashboard/LeadsCommandesPage";
@@ -13,7 +13,9 @@ export default function Home() {
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar onMenuClick={() => setSidebarOpen(true)} />
-        <LeadsCommandesPage />
+        <Suspense fallback={null}>
+          <LeadsCommandesPage />
+        </Suspense>
       </div>
     </div>
   );
