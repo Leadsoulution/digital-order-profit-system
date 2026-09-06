@@ -8,22 +8,34 @@ export type LeadStatus =
   | "Numero incorrect"
   | "Annule"
   | "Duplique"
-  | "A revoir";
+  | "A revoir"
+  | "Faux / spam";
+
+export type LeadSource =
+  | "Excel import"
+  | "whatsapp"
+  | "Agent Manual"
+  | "nouveau"
+  | "Direct"
+  | "Landing page"
+  | "Lightfunnels";
 
 export type Lead = {
   id: string;
   reference: string;
   productLabel: string;
   productName: string;
+  itemCount?: number;
   client: string;
   phone: string;
-  source: "Excel import" | "whatsapp" | "Agent Manual" | "nouveau";
+  source: LeadSource;
   assignedTo: string;
   amount: string;
   status: LeadStatus;
   shipping: string;
   date: string;
   ville?: string;
+  tarif?: string;
   quartier?: string;
   adresse?: string;
 };
@@ -34,15 +46,17 @@ export const leads: Lead[] = [
     reference: "spc-1003",
     productLabel: "SAC",
     productName: "SAC LO",
+    itemCount: 2,
     client: "soufiane imil",
     phone: "0660164362",
-    source: "Excel import",
+    source: "Agent Manual",
     assignedTo: "Imane Lahlou",
     amount: "500 MAD",
     status: "Assigne",
     shipping: "En attente",
     date: "19 aout 2026, 21:59",
-    ville: "Casablanca",
+    ville: "Oujda",
+    tarif: "48 MAD",
     quartier: "Maarif",
     adresse: "11 Rue Example",
   },
@@ -53,7 +67,7 @@ export const leads: Lead[] = [
     productName: "Diffuseur Atlas Zen",
     client: "soufiane imil",
     phone: "0660164361",
-    source: "Excel import",
+    source: "Direct",
     assignedTo: "soufiane imil",
     amount: "200 MAD",
     status: "Nouveau",
@@ -67,12 +81,14 @@ export const leads: Lead[] = [
     productName: "Diffuseur Atlas Zen",
     client: "soufiane imil",
     phone: "0660164360",
-    source: "Excel import",
+    source: "Landing page",
     assignedTo: "soufiane imil",
     amount: "200 MAD",
     status: "Nouveau",
     shipping: "En attente",
     date: "19 aout 2026, 21:59",
+    ville: "Sale",
+    tarif: "38 MAD",
   },
   {
     id: "4",
@@ -81,26 +97,30 @@ export const leads: Lead[] = [
     productName: "Sac Cuir Marrakech",
     client: "ayoub",
     phone: "0622161711",
-    source: "whatsapp",
+    source: "Lightfunnels",
     assignedTo: "Youssef Idrissi",
     amount: "249 MAD",
     status: "Confirme",
     shipping: "En attente",
     date: "21 aout 2026, 22:39",
+    ville: "Meknes",
+    tarif: "42 MAD",
   },
   {
     id: "5",
     reference: "MO-MX7NC-0802",
     productLabel: "BOIS",
     productName: "Bracelet Atlas Silver",
+    itemCount: 2,
     client: "Yassin",
     phone: "0630053131",
-    source: "whatsapp",
+    source: "Landing page",
     assignedTo: "Fatima Zahra",
     amount: "279 MAD",
     status: "Rappel",
     shipping: "En attente",
     date: "20 aout 2026, 19:14",
+    ville: "Tanger",
   },
   {
     id: "6",
@@ -130,9 +150,23 @@ export const leads: Lead[] = [
     shipping: "En attente",
     date: "28 juil. 2026, 08:40",
   },
+  {
+    id: "8",
+    reference: "MO-QX21S-0705",
+    productLabel: "WATCH",
+    productName: "Montre Pro X V2",
+    client: "hicham inconnu",
+    phone: "0611223344",
+    source: "Direct",
+    assignedTo: "Karim El Mansouri",
+    amount: "799 MAD",
+    status: "Faux / spam",
+    shipping: "En attente",
+    date: "5 juil. 2026, 10:12",
+  },
 ];
 
-const tabDefinitions: { label: string; status: LeadStatus | null }[] = [
+const tabDefinitions: { label: string; status: LeadStatus | null; flagged?: boolean }[] = [
   { label: "Tous", status: null },
   { label: "Nouveaux", status: "Nouveau" },
   { label: "Assignes", status: "Assigne" },
@@ -141,6 +175,7 @@ const tabDefinitions: { label: string; status: LeadStatus | null }[] = [
   { label: "Pas de rep.", status: "Pas de reponse" },
   { label: "Annules", status: "Annule" },
   { label: "A revoir", status: "A revoir" },
+  { label: "Faux / spam", status: "Faux / spam", flagged: true },
 ];
 
 export const tabs = tabDefinitions.map((tab) => ({
@@ -160,11 +195,14 @@ export const dateRanges = [
   "Personnalisee",
 ];
 
-export const sourceBadgeStyles: Record<Lead["source"], string> = {
+export const sourceBadgeStyles: Record<LeadSource, string> = {
   "Excel import": "bg-blue-50 text-blue-600",
   whatsapp: "bg-pink-50 text-pink-600",
   "Agent Manual": "bg-gray-100 text-gray-600",
   nouveau: "bg-emerald-50 text-emerald-600",
+  Direct: "bg-gray-100 text-gray-600",
+  "Landing page": "bg-blue-50 text-blue-600",
+  Lightfunnels: "bg-blue-50 text-blue-600",
 };
 
 export const statusBadgeStyles: Record<LeadStatus, string> = {
@@ -178,6 +216,7 @@ export const statusBadgeStyles: Record<LeadStatus, string> = {
   Annule: "bg-red-50 text-red-600",
   Duplique: "bg-yellow-50 text-yellow-700",
   "A revoir": "bg-purple-50 text-purple-600",
+  "Faux / spam": "bg-red-600 text-white",
 };
 
 export const agents = [
@@ -234,6 +273,7 @@ export const leadStatusOptions = [
   "Annule",
   "Duplique",
   "A revoir",
+  "Faux / spam",
 ];
 
 export const productNames = [

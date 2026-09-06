@@ -27,7 +27,20 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  MapPin,
+  Flag,
+  Sparkles,
+  CheckCircle2,
+  PhoneCall,
+  PhoneOff,
+  XCircle,
+  ShoppingBag,
+  Watch,
+  Wind,
+  Droplet,
+  BatteryCharging,
 } from "lucide-react";
+import type { ComponentType } from "react";
 import {
   leads as initialLeads,
   tabs,
@@ -53,6 +66,29 @@ import ChangeStatusModal from "./ChangeStatusModal";
 import AssignModal from "./AssignModal";
 import SelectDropdown from "./SelectDropdown";
 
+const statusIcons: Record<LeadStatus, ComponentType<{ className?: string }>> = {
+  Nouveau: Sparkles,
+  Assigne: UserPlus,
+  "En cours": RefreshCw,
+  Confirme: CheckCircle2,
+  Rappel: PhoneCall,
+  "Pas de reponse": PhoneOff,
+  "Numero incorrect": PhoneOff,
+  Annule: XCircle,
+  Duplique: Copy,
+  "A revoir": Eye,
+  "Faux / spam": Flag,
+};
+
+function productIcon(productName: string): ComponentType<{ className?: string }> {
+  const name = productName.toLowerCase();
+  if (name.includes("montre") || name.includes("watch")) return Watch;
+  if (name.includes("diffuseur")) return Wind;
+  if (name.includes("serum")) return Droplet;
+  if (name.includes("powerbank")) return BatteryCharging;
+  return ShoppingBag;
+}
+
 type ModalState =
   | { type: "create" }
   | { type: "details"; lead: Lead }
@@ -64,7 +100,7 @@ type ModalState =
 export default function LeadsCommandesPage() {
   const [leadsState, setLeadsState] = useState<Lead[]>(initialLeads);
   const [activeTab, setActiveTab] = useState("Tous");
-  const [activeRange, setActiveRange] = useState("Maximum");
+  const [activeRange, setActiveRange] = useState("Tout");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -207,19 +243,37 @@ export default function LeadsCommandesPage() {
       </div>
 
       <div className="mb-4 flex items-center gap-5 overflow-x-auto border-b border-gray-200 lg:gap-6 lg:overflow-visible">
-        {dynamicTabs.map((tab) => (
-          <button
-            key={tab.label}
-            onClick={() => setActiveTab(tab.label)}
-            className={`whitespace-nowrap border-b-2 pb-2.5 text-[13.5px] transition-colors ${
-              activeTab === tab.label
-                ? "border-gray-900 font-semibold text-gray-900"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            {tab.label} (<span className="font-mono">{tab.count}</span>)
-          </button>
-        ))}
+        {dynamicTabs.map((tab) =>
+          tab.flagged ? (
+            <button
+              key={tab.label}
+              onClick={() => setActiveTab(tab.label)}
+              className={`flex items-center gap-1.5 whitespace-nowrap border-b-2 pb-2.5 text-[13.5px] transition-colors ${
+                activeTab === tab.label
+                  ? "border-gray-900 font-semibold text-gray-900"
+                  : "border-transparent text-red-500 hover:text-red-600"
+              }`}
+            >
+              <Flag className="h-3.5 w-3.5" />
+              {tab.label}
+              <span className="rounded-full bg-red-600 px-1.5 py-0.5 font-mono text-[10.5px] font-semibold text-white">
+                {tab.count}
+              </span>
+            </button>
+          ) : (
+            <button
+              key={tab.label}
+              onClick={() => setActiveTab(tab.label)}
+              className={`whitespace-nowrap border-b-2 pb-2.5 text-[13.5px] transition-colors ${
+                activeTab === tab.label
+                  ? "border-gray-900 font-semibold text-gray-900"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              {tab.label} (<span className="font-mono">{tab.count}</span>)
+            </button>
+          )
+        )}
       </div>
 
       <div className="mb-4 flex flex-col gap-2.5 lg:flex-row lg:flex-wrap lg:items-center">
@@ -402,7 +456,7 @@ export default function LeadsCommandesPage() {
         )}
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[980px] text-left">
+          <table className="w-full min-w-[1120px] text-left">
             <thead>
               <tr className="border-b border-gray-100 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
                 <th className="w-10 px-5 py-3">
@@ -416,6 +470,7 @@ export default function LeadsCommandesPage() {
                 <th className="px-3 py-3">Reference</th>
                 <th className="px-3 py-3">Produits</th>
                 <th className="px-3 py-3">Client</th>
+                <th className="px-3 py-3">Ville / Tarif</th>
                 <th className="px-3 py-3">Source</th>
                 <th className="px-3 py-3">Assigne a</th>
                 <th className="px-3 py-3">Montant</th>
@@ -428,7 +483,7 @@ export default function LeadsCommandesPage() {
             <tbody>
               {visibleLeads.length === 0 && (
                 <tr>
-                  <td colSpan={11} className="px-5 py-12 text-center">
+                  <td colSpan={12} className="px-5 py-12 text-center">
                     <div className="flex flex-col items-center gap-2 text-gray-400">
                       <Inbox className="h-6 w-6" />
                       <p className="text-[13px]">
@@ -455,13 +510,38 @@ export default function LeadsCommandesPage() {
                     {lead.reference}
                   </td>
                   <td className="px-3 py-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 text-[10px] font-medium text-gray-400">
-                      {lead.productLabel}
-                    </div>
+                    {(() => {
+                      const ProductIcon = productIcon(lead.productName);
+                      return (
+                        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 text-gray-500">
+                          <ProductIcon className="h-3.5 w-3.5" />
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className="px-3 py-3">
-                    <p className="font-medium text-blue-600">{lead.client}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-medium text-blue-600">{lead.client}</p>
+                      {lead.itemCount && lead.itemCount > 1 && (
+                        <span className="flex items-center gap-0.5 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10.5px] font-medium text-gray-500">
+                          <Package className="h-2.5 w-2.5" />
+                          x{lead.itemCount}
+                        </span>
+                      )}
+                    </div>
                     <p className="font-mono text-[12px] text-gray-400">{lead.phone}</p>
+                  </td>
+                  <td className="px-3 py-3">
+                    {lead.ville && (
+                      <p className="flex items-center gap-1 text-gray-700">
+                        <MapPin className="h-3 w-3 text-gray-400" />
+                        {lead.ville}
+                      </p>
+                    )}
+                    <p className="flex items-center gap-1 font-mono text-[12px] text-gray-400">
+                      <Tag className="h-3 w-3" />
+                      {lead.tarif ?? "Sans tarif"}
+                    </p>
                   </td>
                   <td className="px-3 py-3">
                     <span
@@ -477,11 +557,17 @@ export default function LeadsCommandesPage() {
                     {lead.amount}
                   </td>
                   <td className="px-3 py-3">
-                    <span
-                      className={`rounded-md px-2 py-1 text-[12px] font-medium ${statusBadgeStyles[lead.status]}`}
-                    >
-                      {lead.status}
-                    </span>
+                    {(() => {
+                      const StatusIcon = statusIcons[lead.status];
+                      return (
+                        <span
+                          className={`flex w-fit items-center gap-1 rounded-md px-2 py-1 text-[12px] font-medium ${statusBadgeStyles[lead.status]}`}
+                        >
+                          <StatusIcon className="h-3 w-3" />
+                          {lead.status}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td className="px-3 py-3">
                     <span className="rounded-md bg-gray-100 px-2 py-1 text-[12px] font-medium text-gray-500">
