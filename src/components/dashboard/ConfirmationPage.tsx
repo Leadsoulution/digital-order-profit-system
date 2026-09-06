@@ -34,6 +34,7 @@ import {
   type AssignedRule,
 } from "./confirmation-data";
 import { agents } from "./leads-data";
+import { periodScale, scaleCount } from "./dashboard-data";
 
 const dateRanges = [
   "Aujourd'hui",
@@ -64,6 +65,7 @@ export default function ConfirmationPage() {
   const [activeRange, setActiveRange] = useState("Maximum");
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [customRangeLabel, setCustomRangeLabel] = useState<string | null>(null);
+  const [customRange, setCustomRange] = useState<{ start: Date; end: Date } | null>(null);
   const [activeMode, setActiveMode] = useState(rebalanceModes[0]);
   const [autoAssign, setAutoAssign] = useState(true);
   const [autoReassign, setAutoReassign] = useState(true);
@@ -72,9 +74,47 @@ export default function ConfirmationPage() {
   const [productRules, setProductRules] = useState<AssignedRule[]>(initialProductRules);
   const [sourceRules, setSourceRules] = useState<AssignedRule[]>(initialSourceRules);
   const [regionRules, setRegionRules] = useState<AssignedRule[]>(initialRegionRules);
+  const [weights, setWeights] = useState<Record<string, number>>(
+    Object.fromEntries(percentageRules.map((r) => [r.name, r.weight]))
+  );
 
-  const globalRate = 72;
-  const totalPercent = percentageRules.reduce((sum, r) => sum + r.percent, 0);
+  const totalWeight = Object.values(weights).reduce((sum, w) => sum + w, 0);
+  const weightedRules = percentageRules.map((rule) => ({
+    ...rule,
+    weight: weights[rule.name],
+    percent:
+      totalWeight > 0 ? Math.round((weights[rule.name] / totalWeight) * 100) : 0,
+  }));
+  const totalPercent = weightedRules.reduce((sum, r) => sum + r.percent, 0);
+
+  function resetWeights() {
+    setWeights(Object.fromEntries(percentageRules.map((r) => [r.name, r.weight])));
+  }
+
+  const customDays = customRange
+    ? Math.max(
+        1,
+        Math.round(
+          (customRange.end.getTime() - customRange.start.getTime()) / 86400000
+        ) + 1
+      )
+    : 1;
+  const customScale = Math.min(1, Math.max(0.01, customDays / 365));
+  const scale =
+    activeRange === "Personnalisee" ? customScale : periodScale[activeRange] ?? 1;
+
+  const scaledAgents = agentPerformance.map((agent) => ({
+    ...agent,
+    assigned: scaleCount(agent.assigned, scale),
+    contacted: scaleCount(agent.contacted, scale),
+    confirmed: scaleCount(agent.confirmed, scale),
+    pending: scaleCount(agent.pending, scale),
+  }));
+
+  const teamAssigned = agentPerformance.reduce((sum, a) => sum + a.assigned, 0);
+  const teamConfirmed = agentPerformance.reduce((sum, a) => sum + a.confirmed, 0);
+  const teamContacted = scaledAgents.reduce((sum, a) => sum + a.contacted, 0);
+  const globalRate = teamAssigned > 0 ? Math.round((teamConfirmed / teamAssigned) * 100) : 0;
 
   function toggleExcluded(name: string) {
     setExcluded((prev) =>
@@ -86,6 +126,7 @@ export default function ConfirmationPage() {
     const fmt = (d: Date) =>
       d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
     setCustomRangeLabel(`${fmt(start)} - ${fmt(end)}`);
+    setCustomRange({ start, end });
     setActiveRange("Personnalisee");
     setCalendarOpen(false);
   }
@@ -112,11 +153,19 @@ export default function ConfirmationPage() {
         </div>
 
         <div className="flex items-center gap-2.5">
-          <button className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50">
+          <button
+            disabled
+            title="Bientot disponible"
+            className="flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-[13px] font-medium text-gray-400 opacity-60"
+          >
             <RefreshCw className="h-3.5 w-3.5" />
             Reequilibrer
           </button>
-          <button className="flex items-center gap-1.5 rounded-lg bg-gray-900 px-3.5 py-2 text-[13px] font-medium text-white hover:bg-gray-800">
+          <button
+            disabled
+            title="Bientot disponible"
+            className="flex cursor-not-allowed items-center gap-1.5 rounded-lg bg-gray-300 px-3.5 py-2 text-[13px] font-medium text-gray-500"
+          >
             <Save className="h-3.5 w-3.5" />
             Enregistrer
           </button>
@@ -223,7 +272,9 @@ export default function ConfirmationPage() {
                   <Phone className="h-4 w-4 text-blue-600" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-mono text-[17px] font-semibold text-gray-900">1</p>
+                  <p className="font-mono text-[17px] font-semibold text-gray-900">
+                    {teamContacted.toLocaleString("fr-FR")}
+                  </p>
                   <p className="truncate text-[11.5px] text-gray-500">
                     Contactes (equipe)
                   </p>
@@ -235,7 +286,7 @@ export default function ConfirmationPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="font-mono text-[17px] font-semibold text-gray-900">
-                    100%
+                    {globalRate}%
                   </p>
                   <p className="truncate text-[11.5px] text-gray-500">
                     Taux conv. equipe
@@ -243,13 +294,17 @@ export default function ConfirmationPage() {
                 </div>
               </div>
             </div>
-            <button className="flex h-11 w-11 shrink-0 items-center justify-center self-center rounded-lg bg-orange-500 text-white hover:bg-orange-600 sm:self-stretch">
+            <button
+              disabled
+              title="Bientot disponible"
+              className="flex h-11 w-11 shrink-0 cursor-not-allowed items-center justify-center self-center rounded-lg bg-gray-200 text-gray-400 sm:self-stretch"
+            >
               <Maximize2 className="h-4.5 w-4.5" />
             </button>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {agentPerformance.map((agent) => (
+            {scaledAgents.map((agent) => (
               <AgentPerformanceCard key={agent.name} agent={agent} />
             ))}
           </div>
@@ -284,16 +339,23 @@ export default function ConfirmationPage() {
                     Regles pour ce mode
                   </p>
                   <div className="flex items-center gap-2">
-                    <button className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-[12px] font-medium text-gray-700 hover:bg-gray-50">
+                    <button
+                      disabled
+                      title="Bientot disponible"
+                      className="cursor-not-allowed rounded-md border border-gray-300 bg-white px-3 py-1.5 text-[12px] font-medium text-gray-400 opacity-60"
+                    >
                       Expliquer
                     </button>
-                    <button className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-[12px] font-medium text-gray-700 hover:bg-gray-50">
+                    <button
+                      onClick={resetWeights}
+                      className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-[12px] font-medium text-gray-700 hover:bg-gray-50"
+                    >
                       Reinitialiser
                     </button>
                   </div>
                 </div>
                 <div className="space-y-3">
-                  {percentageRules.map((rule) => (
+                  {weightedRules.map((rule) => (
                     <div key={rule.name} className="flex items-center gap-3">
                       <span
                         className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white ${rule.avatarColor}`}
@@ -307,7 +369,13 @@ export default function ConfirmationPage() {
                         type="range"
                         min={0}
                         max={30}
-                        defaultValue={rule.weight}
+                        value={rule.weight}
+                        onChange={(e) =>
+                          setWeights((prev) => ({
+                            ...prev,
+                            [rule.name]: Number(e.target.value),
+                          }))
+                        }
                         className="h-1.5 flex-1 cursor-pointer accent-gray-900"
                       />
                       <span className="w-6 shrink-0 text-right font-mono text-[12.5px] text-gray-500">

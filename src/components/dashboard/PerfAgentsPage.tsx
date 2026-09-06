@@ -50,7 +50,7 @@ const kpiRows = [
     },
     {
       label: "Leads contactes",
-      value: globalStats.leadsContactes.toString(),
+      value: globalStats.leadsContactes.toLocaleString("fr-FR"),
       icon: Activity,
     },
     {
@@ -81,7 +81,11 @@ export default function PerfAgentsPage() {
             </p>
           </div>
         </div>
-        <button className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50">
+        <button
+          disabled
+          title="Bientot disponible"
+          className="flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-[13px] font-medium text-gray-400 opacity-60"
+        >
           <RefreshCw className="h-3.5 w-3.5" />
           Actualiser
         </button>
@@ -183,7 +187,7 @@ export default function PerfAgentsPage() {
                       {agent.confirmes.toLocaleString("fr-FR")}
                     </td>
                     <td className="px-3 py-3 font-mono text-gray-500">
-                      {agent.contactes}
+                      {agent.contactes.toLocaleString("fr-FR")}
                     </td>
                     <td className="px-3 py-3 font-mono text-gray-500">
                       {agent.conversion.toFixed(1)}%
