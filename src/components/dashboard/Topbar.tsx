@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Menu,
   Search,
@@ -11,8 +12,27 @@ import {
   Moon,
   Bell,
   ChevronDown,
+  Settings,
+  LogOut,
+  AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
 import { leads, type Lead } from "./leads-data";
+
+const notifications = [
+  {
+    icon: AlertTriangle,
+    color: "text-amber-500",
+    text: "8 leads en attente de premiere confirmation",
+    time: "Il y a 12 min",
+  },
+  {
+    icon: RefreshCw,
+    color: "text-blue-500",
+    text: "Google Sheets necessite une reconnexion",
+    time: "Il y a 2h",
+  },
+];
 
 function formatPhone(phone: string) {
   return phone.startsWith("0") ? `+212${phone.slice(1)}` : phone;
@@ -58,6 +78,23 @@ export default function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setNotifOpen(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const results = query.trim()
     ? leads
@@ -132,31 +169,99 @@ export default function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
             </div>
           </div>
 
-          <button className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-[13px] font-medium text-gray-600 hover:bg-gray-50 lg:ml-1.5">
+          <button
+            disabled
+            title="Bientot disponible"
+            className="hidden cursor-not-allowed items-center gap-1 rounded-lg px-2 py-1.5 text-[13px] font-medium text-gray-300 lg:ml-1.5 lg:flex"
+          >
             FR
-            <ChevronDown className="hidden h-3.5 w-3.5 text-gray-400 lg:block" />
+            <ChevronDown className="h-3.5 w-3.5 text-gray-300" />
           </button>
 
-          <button className="rounded-lg p-2 text-gray-500 hover:bg-gray-50">
+          <button
+            disabled
+            title="Bientot disponible"
+            className="cursor-not-allowed rounded-lg p-2 text-gray-300"
+          >
             <Moon className="h-[18px] w-[18px]" />
           </button>
 
-          <button className="relative rounded-lg p-2 text-gray-500 hover:bg-gray-50">
-            <Bell className="h-[18px] w-[18px]" />
-            <span className="absolute right-1 top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 font-mono text-[9px] font-semibold text-white">
-              2
-            </span>
-          </button>
+          <div className="relative" ref={notifRef}>
+            <button
+              onClick={() => setNotifOpen((v) => !v)}
+              className="relative rounded-lg p-2 text-gray-500 hover:bg-gray-50"
+            >
+              <Bell className="h-[18px] w-[18px]" />
+              {notifications.length > 0 && (
+                <span className="absolute right-1 top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 font-mono text-[9px] font-semibold text-white">
+                  {notifications.length}
+                </span>
+              )}
+            </button>
+            {notifOpen && (
+              <div className="absolute right-0 top-full z-30 mt-1 w-80 overflow-hidden rounded-lg border border-gray-200 bg-white py-1.5 shadow-lg">
+                <p className="px-3 pb-1.5 text-[10.5px] font-semibold tracking-wide text-gray-400">
+                  NOTIFICATIONS
+                </p>
+                {notifications.map((notif) => {
+                  const Icon = notif.icon;
+                  return (
+                    <div
+                      key={notif.text}
+                      className="flex items-start gap-2.5 px-3 py-2 hover:bg-gray-50"
+                    >
+                      <Icon className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${notif.color}`} />
+                      <div className="min-w-0">
+                        <p className="text-[12.5px] text-gray-700">{notif.text}</p>
+                        <p className="text-[11px] text-gray-400">{notif.time}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
-          <button className="flex items-center gap-2 rounded-lg py-1 pl-1 pr-1.5 hover:bg-gray-50">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-900 text-[12px] font-semibold text-white">
-              MA
-            </span>
-            <span className="hidden text-[13px] font-medium text-gray-700 lg:inline">
-              Mohamed Alaoui
-            </span>
-            <ChevronDown className="hidden h-3.5 w-3.5 text-gray-400 lg:block" />
-          </button>
+          <div className="relative" ref={userMenuRef}>
+            <button
+              onClick={() => setUserMenuOpen((v) => !v)}
+              className="flex items-center gap-2 rounded-lg py-1 pl-1 pr-1.5 hover:bg-gray-50"
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-900 text-[12px] font-semibold text-white">
+                MA
+              </span>
+              <span className="hidden text-[13px] font-medium text-gray-700 lg:inline">
+                Mohamed Alaoui
+              </span>
+              <ChevronDown className="hidden h-3.5 w-3.5 text-gray-400 lg:block" />
+            </button>
+            {userMenuOpen && (
+              <div className="absolute right-0 top-full z-30 mt-1 w-52 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+                <div className="border-b border-gray-100 px-3 py-2">
+                  <p className="truncate text-[13px] font-medium text-gray-800">
+                    Mohamed Alaoui
+                  </p>
+                  <p className="truncate text-[11.5px] text-gray-400">
+                    admin@lead2door.com
+                  </p>
+                </div>
+                <Link
+                  href="/parametres"
+                  onClick={() => setUserMenuOpen(false)}
+                  className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-[13px] text-gray-700 hover:bg-gray-50"
+                >
+                  <Settings className="h-3.5 w-3.5 text-gray-400" />
+                  Parametres
+                </Link>
+                <div className="mt-1 border-t border-gray-100 pt-1">
+                  <div className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-[13px] text-gray-400">
+                    <LogOut className="h-3.5 w-3.5" />
+                    Deconnexion
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
