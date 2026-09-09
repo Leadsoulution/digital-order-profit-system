@@ -38,6 +38,8 @@ export type Lead = {
   tarif?: string;
   quartier?: string;
   adresse?: string;
+  trackingNumber?: string;
+  trackingError?: string;
 };
 
 export const leads: Lead[] = [

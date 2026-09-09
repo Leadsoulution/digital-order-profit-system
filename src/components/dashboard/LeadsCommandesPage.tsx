@@ -40,6 +40,8 @@ import {
   Wind,
   Droplet,
   BatteryCharging,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import type { ComponentType } from "react";
 import {
@@ -107,6 +109,7 @@ export default function LeadsCommandesPage() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sendingToForceLog, setSendingToForceLog] = useState<Set<string>>(new Set());
   const [modal, setModal] = useState<ModalState>(() => {
     const leadId = searchParams.get("lead");
     const lead = leadId ? initialLeads.find((l) => l.id === leadId) : undefined;
@@ -163,6 +166,49 @@ export default function LeadsCommandesPage() {
       else next.add(id);
       return next;
     });
+  }
+
+  async function sendToForceLog(lead: Lead) {
+    setSendingToForceLog((prev) => new Set(prev).add(lead.id));
+    try {
+      const res = await fetch("/api/forcelog/parcels", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reference: lead.reference,
+          client: lead.client,
+          phone: lead.phone,
+          ville: lead.ville,
+          adresse: lead.adresse,
+          amount: lead.amount,
+          productName: lead.productName,
+        }),
+      });
+      const data = await res.json();
+      setLeadsState((prev) =>
+        prev.map((l) =>
+          l.id === lead.id
+            ? res.ok
+              ? { ...l, trackingNumber: data.trackingNumber, trackingError: undefined }
+              : { ...l, trackingError: data.error ?? "Erreur ForceLog inconnue.", trackingNumber: undefined }
+            : l
+        )
+      );
+    } catch {
+      setLeadsState((prev) =>
+        prev.map((l) =>
+          l.id === lead.id
+            ? { ...l, trackingError: "Impossible de joindre le serveur.", trackingNumber: undefined }
+            : l
+        )
+      );
+    } finally {
+      setSendingToForceLog((prev) => {
+        const next = new Set(prev);
+        next.delete(lead.id);
+        return next;
+      });
+    }
   }
 
   function deleteLead(id: string) {
@@ -249,6 +295,7 @@ export default function LeadsCommandesPage() {
       onAssign: () => setModal({ type: "assign", leadIds: [lead.id] }),
       onChangeStatus: () => setModal({ type: "status", leadIds: [lead.id] }),
       onDelete: () => deleteLead(lead.id),
+      onSendToForceLog: () => sendToForceLog(lead),
     };
   }
 
@@ -511,7 +558,7 @@ export default function LeadsCommandesPage() {
         )}
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1120px] text-left">
+          <table className="w-full min-w-[1220px] text-left">
             <thead>
               <tr className="border-b border-gray-100 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
                 <th className="w-10 px-5 py-3">
@@ -532,13 +579,14 @@ export default function LeadsCommandesPage() {
                 <th className="px-3 py-3">Statut</th>
                 <th className="px-3 py-3">Expedition</th>
                 <th className="px-3 py-3">Date</th>
+                <th className="px-3 py-3">Code suivi</th>
                 <th className="w-10 px-3 py-3" />
               </tr>
             </thead>
             <tbody>
               {visibleLeads.length === 0 && (
                 <tr>
-                  <td colSpan={12} className="px-5 py-12 text-center">
+                  <td colSpan={13} className="px-5 py-12 text-center">
                     <div className="flex flex-col items-center gap-2 text-gray-400">
                       <Inbox className="h-6 w-6" />
                       <p className="text-[13px]">
@@ -632,6 +680,28 @@ export default function LeadsCommandesPage() {
                   <td className="whitespace-nowrap px-3 py-3 font-mono text-gray-500">
                     {lead.date}
                   </td>
+                  <td className="whitespace-nowrap px-3 py-3">
+                    {sendingToForceLog.has(lead.id) ? (
+                      <span className="flex items-center gap-1.5 text-[12px] text-gray-400">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Envoi...
+                      </span>
+                    ) : lead.trackingNumber ? (
+                      <span className="font-mono text-[12px] font-medium text-gray-800">
+                        {lead.trackingNumber}
+                      </span>
+                    ) : lead.trackingError ? (
+                      <span
+                        title={lead.trackingError}
+                        className="flex max-w-[160px] items-center gap-1 truncate text-[12px] font-medium text-red-600"
+                      >
+                        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">{lead.trackingError}</span>
+                      </span>
+                    ) : (
+                      <span className="text-[12px] text-gray-300">&mdash;</span>
+                    )}
+                  </td>
                   <td className="px-3 py-3">
                     <RowActionsMenu {...getRowActions(lead)} />
                   </td>
@@ -724,7 +794,26 @@ export default function LeadsCommandesPage() {
                 </span>
               </div>
 
-              <p className="mb-3 font-mono text-[12px] text-gray-400">{lead.date}</p>
+              <p className="mb-1 font-mono text-[12px] text-gray-400">{lead.date}</p>
+
+              <div className="mb-3">
+                {sendingToForceLog.has(lead.id) ? (
+                  <span className="flex items-center gap-1.5 text-[12px] text-gray-400">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Envoi vers ForceLog...
+                  </span>
+                ) : lead.trackingNumber ? (
+                  <span className="flex items-center gap-1.5 font-mono text-[12px] font-medium text-gray-700">
+                    <Truck className="h-3.5 w-3.5 text-gray-400" />
+                    {lead.trackingNumber}
+                  </span>
+                ) : lead.trackingError ? (
+                  <span className="flex items-center gap-1.5 text-[12px] font-medium text-red-600">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                    {lead.trackingError}
+                  </span>
+                ) : null}
+              </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <button

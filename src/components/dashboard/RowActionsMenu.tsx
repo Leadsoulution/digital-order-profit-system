@@ -11,6 +11,7 @@ import {
   UserPlus,
   RefreshCw,
   Trash2,
+  Truck,
 } from "lucide-react";
 
 type RowActionsMenuProps = {
@@ -22,6 +23,7 @@ type RowActionsMenuProps = {
   onAssign: () => void;
   onChangeStatus: () => void;
   onDelete: () => void;
+  onSendToForceLog?: () => void;
 };
 
 export default function RowActionsMenu({
@@ -33,6 +35,7 @@ export default function RowActionsMenu({
   onAssign,
   onChangeStatus,
   onDelete,
+  onSendToForceLog,
 }: RowActionsMenuProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -58,6 +61,9 @@ export default function RowActionsMenu({
     [
       { label: "Assigner", icon: UserPlus, onClick: onAssign },
       { label: "Changer statut", icon: RefreshCw, onClick: onChangeStatus },
+      ...(onSendToForceLog
+        ? [{ label: "Envoyer vers ForceLog", icon: Truck, onClick: onSendToForceLog }]
+        : []),
     ],
   ];
 
