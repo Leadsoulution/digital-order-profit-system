@@ -1,4 +1,4 @@
-export type IntegrationCategory = "leads" | "ads";
+export type IntegrationCategory = "leads" | "ads" | "shipping";
 export type IntegrationStatus = "Active" | "Configuration en attente";
 export type IntegrationHealth = "Sain" | "A verifier" | "Aucun run";
 
@@ -118,6 +118,20 @@ export const integrations: Integration[] = [
     lastSync: "26 aout 2026, 11:58",
     connectedAt: "27 juin 2026, 13:31",
     logo: { letter: "Sc", bg: "bg-yellow-50", fg: "text-yellow-600" },
+  },
+  {
+    id: "forcelog",
+    name: "ForceLog",
+    subtitle: "Transporteur ForceLog Maroc",
+    category: "shipping",
+    status: "Configuration en attente",
+    health: "Aucun run",
+    lastImport: 0,
+    lastSync: null,
+    connectedAt: null,
+    description:
+      "Creez des colis, suivez les livraisons et recuperez les etiquettes directement depuis Lead2Door.",
+    logo: { letter: "FL", bg: "bg-orange-50", fg: "text-orange-600" },
   },
 ];
 

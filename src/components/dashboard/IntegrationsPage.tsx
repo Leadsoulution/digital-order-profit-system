@@ -12,16 +12,18 @@ import {
   RefreshCw,
   SlidersHorizontal,
   Store,
+  Truck,
 } from "lucide-react";
 import ConnectIntegrationModal from "./ConnectIntegrationModal";
 import { integrations, alertPlatforms, type Integration } from "./integrations-data";
 
-type TabKey = "toutes" | "leads" | "ads";
+type TabKey = "toutes" | "leads" | "ads" | "shipping";
 
 const tabs: { key: TabKey; label: string; icon: typeof LayoutGrid; category?: Integration["category"] }[] = [
   { key: "toutes", label: "Toutes", icon: LayoutGrid },
   { key: "leads", label: "Sources de leads", icon: Inbox, category: "leads" },
   { key: "ads", label: "Regies publicitaires", icon: Megaphone, category: "ads" },
+  { key: "shipping", label: "Societes de livraison", icon: Truck, category: "shipping" },
 ];
 
 const healthDot: Record<Integration["health"], string> = {
@@ -41,11 +43,17 @@ const quickAddShops = ["WooCommerce", "YouCan"];
 function PlatformCard({
   integration,
   onConnect,
+  liveConnected,
 }: {
   integration: Integration;
   onConnect: (integration: Integration) => void;
+  liveConnected?: boolean | null;
 }) {
   const isAds = integration.category === "ads";
+  const isActive =
+    liveConnected === undefined || liveConnected === null
+      ? integration.status === "Active"
+      : liveConnected;
   const [syncState, setSyncState] = useState<"idle" | "syncing" | "done">("idle");
 
   useEffect(() => {
@@ -63,6 +71,8 @@ function PlatformCard({
     : integration.connectedAt
     ? `Connecte le ${integration.connectedAt}`
     : "Pas encore connecte";
+  const health: Integration["health"] =
+    liveConnected === true ? "Sain" : liveConnected === false ? "A verifier" : integration.health;
 
   return (
     <div className="flex flex-col rounded-xl border border-gray-200 bg-white p-4">
@@ -82,9 +92,13 @@ function PlatformCard({
             </p>
           </div>
         </div>
-        <span className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-600">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          Active
+        <span
+          className={`flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+            isActive ? "bg-emerald-50 text-emerald-600" : "bg-gray-100 text-gray-500"
+          }`}
+        >
+          <span className={`h-1.5 w-1.5 rounded-full ${isActive ? "bg-emerald-500" : "bg-gray-400"}`} />
+          {isActive ? "Active" : "Configuration en attente"}
         </span>
       </div>
 
@@ -114,9 +128,9 @@ function PlatformCard({
       </div>
 
       <div className="mb-3 flex min-w-0 items-center gap-1.5 text-[12px]">
-        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${healthDot[integration.health]}`} />
-        <span className={`shrink-0 font-medium ${healthText[integration.health]}`}>
-          {integration.health}
+        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${healthDot[health]}`} />
+        <span className={`shrink-0 font-medium ${healthText[health]}`}>
+          {health}
         </span>
         <span className="truncate text-gray-400">&middot; {rightLabel}</span>
       </div>
@@ -192,9 +206,30 @@ function PlatformCard({
 export default function IntegrationsPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("leads");
   const [connectTarget, setConnectTarget] = useState<Integration | null>(null);
+  const [forcelogConnected, setForcelogConnected] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/forcelog/health")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) setForcelogConnected(Boolean(data.connected));
+      })
+      .catch(() => {
+        if (!cancelled) setForcelogConnected(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const isConnected = (integration: Integration) =>
+    integration.id === "forcelog"
+      ? Boolean(forcelogConnected)
+      : integration.status === "Active";
 
   const totalCount = integrations.length;
-  const connectedCount = integrations.filter((i) => i.status === "Active").length;
+  const connectedCount = integrations.filter(isConnected).length;
   const activeImports = connectedCount;
   const totalRecords = integrations.reduce((sum, i) => sum + i.lastImport, 0);
   const errorCount = 0;
@@ -380,6 +415,9 @@ export default function IntegrationsPage() {
             key={integration.id}
             integration={integration}
             onConnect={setConnectTarget}
+            liveConnected={
+              integration.id === "forcelog" ? forcelogConnected : undefined
+            }
           />
         ))}
       </div>
