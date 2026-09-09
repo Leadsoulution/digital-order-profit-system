@@ -5,7 +5,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   Inbox,
-  Key,
   LayoutGrid,
   Link2,
   Megaphone,
@@ -13,18 +12,16 @@ import {
   RefreshCw,
   SlidersHorizontal,
   Store,
-  Truck,
 } from "lucide-react";
 import ConnectIntegrationModal from "./ConnectIntegrationModal";
 import { integrations, alertPlatforms, type Integration } from "./integrations-data";
 
-type TabKey = "toutes" | "leads" | "ads" | "shipping";
+type TabKey = "toutes" | "leads" | "ads";
 
 const tabs: { key: TabKey; label: string; icon: typeof LayoutGrid; category?: Integration["category"] }[] = [
   { key: "toutes", label: "Toutes", icon: LayoutGrid },
   { key: "leads", label: "Sources de leads", icon: Inbox, category: "leads" },
   { key: "ads", label: "Regies publicitaires", icon: Megaphone, category: "ads" },
-  { key: "shipping", label: "Shipping", icon: Truck, category: "shipping" },
 ];
 
 const healthDot: Record<Integration["health"], string> = {
@@ -39,7 +36,7 @@ const healthText: Record<Integration["health"], string> = {
   "Aucun run": "text-gray-400",
 };
 
-const quickAddShops = ["WooCommerce", "Storeep", "YouCan"];
+const quickAddShops = ["WooCommerce", "YouCan"];
 
 function PlatformCard({
   integration,
@@ -192,107 +189,6 @@ function PlatformCard({
   );
 }
 
-function CarrierCard({
-  integration,
-  onConnect,
-}: {
-  integration: Integration;
-  onConnect: (integration: Integration) => void;
-}) {
-  const pending = integration.status !== "Active";
-
-  return (
-    <div className="flex flex-col rounded-xl border border-gray-200 bg-white p-4">
-      <div className="mb-3 flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2.5">
-          <span
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[11.5px] font-semibold ${integration.logo.bg} ${integration.logo.fg}`}
-          >
-            {integration.logo.letter}
-          </span>
-          <div className="min-w-0">
-            <p className="truncate text-[13.5px] font-semibold text-gray-900">
-              {integration.name}
-            </p>
-            <p className="truncate text-[11.5px] text-gray-500">
-              {integration.subtitle}
-            </p>
-          </div>
-        </div>
-        <span
-          className={`flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
-            pending ? "bg-gray-100 text-gray-500" : "bg-emerald-50 text-emerald-600"
-          }`}
-        >
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${pending ? "bg-gray-400" : "bg-emerald-500"}`}
-          />
-          {pending ? "Configuration en attente" : "Active"}
-        </span>
-      </div>
-
-      {pending && integration.description && (
-        <p className="mb-3 text-[12px] text-gray-500">{integration.description}</p>
-      )}
-
-      <div className="mb-3 grid grid-cols-2 gap-3">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-            Dernier import
-          </p>
-          <p className="font-mono text-[13px] font-medium text-gray-800">
-            {integration.lastImport.toLocaleString("fr-FR")}
-          </p>
-        </div>
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-            Derniere sync
-          </p>
-          <p className="truncate font-mono text-[12px] text-gray-600">
-            {integration.lastSync ?? "Jamais"}
-          </p>
-        </div>
-      </div>
-
-      <div className="mb-3 flex min-w-0 items-center gap-1.5 text-[12px]">
-        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${healthDot[integration.health]}`} />
-        <span className={`shrink-0 font-medium ${healthText[integration.health]}`}>
-          {integration.health}
-        </span>
-        <span className="truncate text-gray-400">
-          &middot; {integration.connectedAt ? `Connecte le ${integration.connectedAt}` : "Pas encore connecte"}
-        </span>
-      </div>
-
-      <div className="mt-auto flex items-center gap-2">
-        {pending ? (
-          <button
-            onClick={() => onConnect(integration)}
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-gray-900 px-3 py-2 text-[12.5px] font-medium text-white hover:bg-gray-800"
-          >
-            Connecter
-          </button>
-        ) : (
-          <>
-            <button
-              onClick={() => onConnect(integration)}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-gray-900 px-3 py-2 text-[12.5px] font-medium text-white hover:bg-gray-800"
-            >
-              Ouvrir les parametres
-            </button>
-            <button
-              onClick={() => onConnect(integration)}
-              className="shrink-0 rounded-lg border border-gray-300 p-2 text-gray-500 hover:bg-gray-50"
-            >
-              <Key className="h-3.5 w-3.5" />
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
 export default function IntegrationsPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("leads");
   const [connectTarget, setConnectTarget] = useState<Integration | null>(null);
@@ -307,10 +203,6 @@ export default function IntegrationsPage() {
   const visible = activeTabDef.category
     ? integrations.filter((i) => i.category === activeTabDef.category)
     : integrations;
-
-  const shippingCarriers = integrations.filter((i) => i.category === "shipping");
-  const connectedCarriers = shippingCarriers.filter((i) => i.status === "Active").length;
-  const carriersToWatch = shippingCarriers.filter((i) => i.health === "A verifier").length;
 
   function findByName(name: string) {
     return integrations.find((i) => i.name === name) ?? null;
@@ -482,73 +374,15 @@ export default function IntegrationsPage() {
         })}
       </div>
 
-      {activeTab === "shipping" ? (
-        <>
-          <div className="mb-4 flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-[13.5px] font-semibold text-gray-900">
-                Hub de controle shipping
-              </p>
-              <p className="max-w-xl text-[12px] text-gray-500">
-                Gerez chaque transporteur ici, puis ouvrez son espace pour
-                revoir les connexions concretes, le mapping, le routage, le
-                stock et le diagnostic.
-              </p>
-            </div>
-            <span className="flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-[12.5px] font-medium text-gray-600">
-              <Truck className="h-3.5 w-3.5" />
-              <span className="font-mono">{shippingCarriers.length}</span> transporteurs
-            </span>
-          </div>
-
-          <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-gray-200 bg-white p-3.5">
-              <p className="text-[10.5px] font-semibold uppercase tracking-wide text-gray-400">
-                Connectees
-              </p>
-              <p className="font-mono text-[19px] font-semibold text-gray-900">
-                {connectedCarriers}
-              </p>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-3.5">
-              <p className="text-[10.5px] font-semibold uppercase tracking-wide text-gray-400">
-                Actives
-              </p>
-              <p className="font-mono text-[19px] font-semibold text-gray-900">
-                {connectedCarriers}
-              </p>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-3.5">
-              <p className="text-[10.5px] font-semibold uppercase tracking-wide text-gray-400">
-                A surveiller
-              </p>
-              <p className="font-mono text-[19px] font-semibold text-gray-900">
-                {carriersToWatch}
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {shippingCarriers.map((carrier) => (
-              <CarrierCard
-                key={carrier.id}
-                integration={carrier}
-                onConnect={setConnectTarget}
-              />
-            ))}
-          </div>
-        </>
-      ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {visible.map((integration) => (
-            <PlatformCard
-              key={integration.id}
-              integration={integration}
-              onConnect={setConnectTarget}
-            />
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {visible.map((integration) => (
+          <PlatformCard
+            key={integration.id}
+            integration={integration}
+            onConnect={setConnectTarget}
+          />
+        ))}
+      </div>
 
       {connectTarget && (
         <ConnectIntegrationModal

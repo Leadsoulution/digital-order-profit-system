@@ -1,4 +1,4 @@
-export type IntegrationCategory = "leads" | "ads" | "shipping";
+export type IntegrationCategory = "leads" | "ads";
 export type IntegrationStatus = "Active" | "Configuration en attente";
 export type IntegrationHealth = "Sain" | "A verifier" | "Aucun run";
 
@@ -31,19 +31,6 @@ export const integrations: Integration[] = [
     connectedAt: "2 juil. 2026, 13:31",
     needsReconnect: true,
     logo: { letter: "GS", bg: "bg-emerald-50", fg: "text-emerald-600" },
-  },
-  {
-    id: "storeep",
-    name: "Storeep",
-    subtitle: "2 boutiques",
-    category: "leads",
-    status: "Active",
-    health: "A verifier",
-    lastImport: 1898,
-    lastSync: "26 aout 2026, 13:47",
-    connectedAt: "13 juil. 2026, 13:31",
-    activeCount: 2,
-    logo: { letter: "S", bg: "bg-blue-50", fg: "text-blue-600" },
   },
   {
     id: "woocommerce",
@@ -97,18 +84,6 @@ export const integrations: Integration[] = [
     logo: { letter: "FW", bg: "bg-sky-50", fg: "text-sky-600" },
   },
   {
-    id: "meta-ads",
-    name: "Meta Ads",
-    subtitle: "Meta Ads Demo Maroc",
-    category: "ads",
-    status: "Active",
-    health: "Sain",
-    lastImport: 2400,
-    lastSync: "26 aout 2026, 12:30",
-    connectedAt: "27 juin 2026, 13:31",
-    logo: { letter: "M", bg: "bg-blue-50", fg: "text-blue-600" },
-  },
-  {
     id: "google-ads",
     name: "Google Ads",
     subtitle: "Google Ads Demo Maroc",
@@ -143,72 +118,6 @@ export const integrations: Integration[] = [
     lastSync: "26 aout 2026, 11:58",
     connectedAt: "27 juin 2026, 13:31",
     logo: { letter: "Sc", bg: "bg-yellow-50", fg: "text-yellow-600" },
-  },
-  {
-    id: "dropex",
-    name: "Dropex",
-    subtitle: "Dropex Demo Maroc",
-    category: "shipping",
-    status: "Active",
-    health: "Sain",
-    lastImport: 1320,
-    lastSync: "26 aout 2026, 13:02",
-    connectedAt: "27 juin 2026, 13:31",
-    logo: { letter: "D", bg: "bg-indigo-50", fg: "text-indigo-600" },
-  },
-  {
-    id: "yalidine",
-    name: "Yalidine",
-    subtitle: "Yalidine Demo Maroc",
-    category: "shipping",
-    status: "Active",
-    health: "Sain",
-    lastImport: 450,
-    lastSync: "26 aout 2026, 12:48",
-    connectedAt: "9 aout 2026, 09:44",
-    logo: { letter: "Y", bg: "bg-teal-50", fg: "text-teal-600" },
-  },
-  {
-    id: "sendit",
-    name: "Sendit",
-    subtitle: "Sendit",
-    category: "shipping",
-    status: "Configuration en attente",
-    health: "Aucun run",
-    lastImport: 0,
-    lastSync: null,
-    connectedAt: null,
-    description:
-      "Connectez Sendit pour creer, suivre et rafraichir des expeditions via des actions admin explicites",
-    logo: { letter: "Se", bg: "bg-cyan-50", fg: "text-cyan-600" },
-  },
-  {
-    id: "digylog",
-    name: "Digylog",
-    subtitle: "Digylog",
-    category: "shipping",
-    status: "Configuration en attente",
-    health: "Aucun run",
-    lastImport: 0,
-    lastSync: null,
-    connectedAt: null,
-    description:
-      "Connectez Digylog pour creer, suivre et synchroniser les expeditions standard via l'API Seller",
-    logo: { letter: "Di", bg: "bg-slate-100", fg: "text-slate-600" },
-  },
-  {
-    id: "ozonexpress",
-    name: "OzonExpress",
-    subtitle: "OzonExpress",
-    category: "shipping",
-    status: "Configuration en attente",
-    health: "Aucun run",
-    lastImport: 0,
-    lastSync: null,
-    connectedAt: null,
-    description:
-      "Connectez OzonExpress pour creer des colis, suivre les statuts et gerer les bons de livraison",
-    logo: { letter: "Oz", bg: "bg-orange-50", fg: "text-orange-600" },
   },
 ];
 
