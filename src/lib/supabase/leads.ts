@@ -86,10 +86,14 @@ const COLUMNS =
 
 export async function listLeads(): Promise<Lead[]> {
   const supabase = getSupabaseServerClient();
+  // `id` departage les `created_at` identiques : sans lui, deux lignes de
+  // meme horodatage ressortent dans un ordre arbitraire, et une ligne
+  // modifiee (reecrite en fin de table) se retrouve affichee en dernier.
   const { data, error } = await supabase
     .from("leads")
     .select(COLUMNS)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: true });
 
   if (error) throw new Error(error.message);
   return (data as LeadRow[]).map(toLead);
