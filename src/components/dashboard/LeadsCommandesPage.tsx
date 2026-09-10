@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ShoppingCart,
@@ -45,7 +45,6 @@ import {
 } from "lucide-react";
 import type { ComponentType } from "react";
 import {
-  leads as initialLeads,
   tabs,
   dateRanges,
   sourceBadgeStyles,
@@ -103,18 +102,50 @@ type ModalState =
 export default function LeadsCommandesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [leadsState, setLeadsState] = useState<Lead[]>(initialLeads);
+  const [leadsState, setLeadsState] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("Tous");
   const [activeRange, setActiveRange] = useState("Tout");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sendingToForceLog, setSendingToForceLog] = useState<Set<string>>(new Set());
-  const [modal, setModal] = useState<ModalState>(() => {
-    const leadId = searchParams.get("lead");
-    const lead = leadId ? initialLeads.find((l) => l.id === leadId) : undefined;
-    return lead ? { type: "details", lead } : null;
-  });
+  const [modal, setModal] = useState<ModalState>(null);
+
+  // L'id d'une eventuelle arrivee depuis la recherche globale (?lead=<id>),
+  // capture une seule fois : `searchParams` change d'identite a chaque
+  // rendu et relancerait le chargement en boucle s'il etait une dependance.
+  const deepLinkLeadId = useRef(searchParams.get("lead"));
+
+  // Charge les commandes depuis la base, au montage uniquement.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/leads")
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return;
+        if (data.error) {
+          setLoadError(data.error);
+        } else {
+          const loaded: Lead[] = data.leads ?? [];
+          setLeadsState(loaded);
+          const lead = deepLinkLeadId.current
+            ? loaded.find((l) => l.id === deepLinkLeadId.current)
+            : undefined;
+          if (lead) setModal({ type: "details", lead });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setLoadError("Impossible de joindre le serveur.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (searchParams.get("lead")) {
@@ -185,23 +216,19 @@ export default function LeadsCommandesPage() {
         }),
       });
       const data = await res.json();
-      setLeadsState((prev) =>
-        prev.map((l) =>
-          l.id === lead.id
-            ? res.ok
-              ? { ...l, trackingNumber: data.trackingNumber, trackingError: undefined }
-              : { ...l, trackingError: data.error ?? "Erreur ForceLog inconnue.", trackingNumber: undefined }
-            : l
-        )
-      );
+      // Le resultat (code de suivi ou message d'erreur) est enregistre en
+      // base pour qu'il survive au rechargement de la page.
+      await persistChanges([lead.id], {
+        trackingNumber: res.ok ? data.trackingNumber : undefined,
+        trackingError: res.ok
+          ? undefined
+          : data.error ?? "Erreur ForceLog inconnue.",
+      });
     } catch {
-      setLeadsState((prev) =>
-        prev.map((l) =>
-          l.id === lead.id
-            ? { ...l, trackingError: "Impossible de joindre le serveur.", trackingNumber: undefined }
-            : l
-        )
-      );
+      await persistChanges([lead.id], {
+        trackingNumber: undefined,
+        trackingError: "Impossible de joindre le serveur.",
+      });
     } finally {
       setSendingToForceLog((prev) => {
         const next = new Set(prev);
@@ -211,34 +238,72 @@ export default function LeadsCommandesPage() {
     }
   }
 
-  function deleteLead(id: string) {
+  /**
+   * Applique un changement en base puis met l'ecran a jour.
+   * L'ecran est mis a jour immediatement (optimiste) et remis dans son
+   * etat precedent si la base refuse, pour que l'affichage ne mente
+   * jamais sur ce qui est reellement enregistre.
+   */
+  async function persistChanges(ids: string[], changes: Partial<Lead>) {
+    const previous = leadsState;
+    setLeadsState((prev) =>
+      prev.map((l) => (ids.includes(l.id) ? { ...l, ...changes } : l))
+    );
+    try {
+      const res = await fetch("/api/leads", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids, changes }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setLeadsState((prev) =>
+        prev.map((l) => {
+          const updated = (data.leads as Lead[]).find((u) => u.id === l.id);
+          return updated ?? l;
+        })
+      );
+    } catch (error) {
+      setLeadsState(previous);
+      setLoadError(
+        error instanceof Error ? error.message : "Enregistrement impossible."
+      );
+    }
+  }
+
+  async function deleteLead(id: string) {
+    const previous = leadsState;
     setLeadsState((prev) => prev.filter((l) => l.id !== id));
     setSelectedIds((prev) => {
       const next = new Set(prev);
       next.delete(id);
       return next;
     });
+    try {
+      const res = await fetch(`/api/leads/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      setLeadsState(previous);
+      setLoadError(
+        error instanceof Error ? error.message : "Suppression impossible."
+      );
+    }
   }
 
   function applyAssign(agent: string) {
-    if (!modal || (modal.type !== "assign")) return;
-    const ids = modal.leadIds;
-    setLeadsState((prev) =>
-      prev.map((l) => (ids.includes(l.id) ? { ...l, assignedTo: agent } : l))
-    );
+    if (!modal || modal.type !== "assign") return;
+    void persistChanges(modal.leadIds, { assignedTo: agent });
     setSelectedIds(new Set());
     setModal(null);
   }
 
   function applyStatus(status: string) {
     if (!modal || modal.type !== "status") return;
-    const ids = modal.leadIds;
     if (status !== "Aucun changement") {
-      setLeadsState((prev) =>
-        prev.map((l) =>
-          ids.includes(l.id) ? { ...l, status: status as LeadStatus } : l
-        )
-      );
+      void persistChanges(modal.leadIds, { status: status as LeadStatus });
     }
     setSelectedIds(new Set());
     setModal(null);
@@ -343,6 +408,24 @@ export default function LeadsCommandesPage() {
           </button>
         </div>
       </div>
+
+      {loadError && (
+        <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-red-100 bg-red-50 px-3.5 py-2.5">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+          <div className="min-w-0 flex-1">
+            <p className="text-[12.5px] font-medium text-red-700">
+              Probleme d&apos;enregistrement
+            </p>
+            <p className="text-[11.5px] text-red-600">{loadError}</p>
+          </div>
+          <button
+            onClick={() => setLoadError(null)}
+            className="shrink-0 rounded-md p-1 text-red-400 hover:bg-red-100"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
 
       <div className="mb-4 flex items-center gap-5 overflow-x-auto border-b border-gray-200 lg:gap-6 lg:overflow-visible">
         {dynamicTabs.map((tab) =>
@@ -584,7 +667,17 @@ export default function LeadsCommandesPage() {
               </tr>
             </thead>
             <tbody>
-              {visibleLeads.length === 0 && (
+              {loading && (
+                <tr>
+                  <td colSpan={13} className="px-5 py-12 text-center">
+                    <div className="flex flex-col items-center gap-2 text-gray-400">
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                      <p className="text-[13px]">Chargement des commandes...</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+              {!loading && visibleLeads.length === 0 && (
                 <tr>
                   <td colSpan={13} className="px-5 py-12 text-center">
                     <div className="flex flex-col items-center gap-2 text-gray-400">
@@ -740,7 +833,13 @@ export default function LeadsCommandesPage() {
       </div>
 
       <div className="space-y-3 lg:hidden">
-        {visibleLeads.length === 0 && (
+        {loading && (
+          <div className="flex flex-col items-center gap-2 rounded-xl border border-gray-200 bg-white py-12 text-gray-400">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <p className="text-[13px]">Chargement des commandes...</p>
+          </div>
+        )}
+        {!loading && visibleLeads.length === 0 && (
           <div className="flex flex-col items-center gap-2 rounded-xl border border-gray-200 bg-white py-12 text-gray-400">
             <Inbox className="h-6 w-6" />
             <p className="text-[13px]">Aucune commande dans cette categorie.</p>
