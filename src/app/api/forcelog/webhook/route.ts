@@ -23,6 +23,17 @@ type ForceLogWebhookPayload = {
   STATUS?: string;
   STATUS_CODE?: string;
   SITUATION?: string;
+  /**
+   * Livreur et date de livraison : absents de GetParcels, donc le webhook
+   * est la seule source transporteur possible. Le nom exact du champ n'est
+   * pas documente, on accepte les variantes rencontrees.
+   */
+  DELIVERY_AGENT?: string;
+  DELIVERYMAN?: string;
+  LIVREUR?: string;
+  DELIVERY_DATE?: string;
+  DELIVERED_AT?: string;
+  DELIVERY_TIME?: string;
 };
 
 export async function POST(request: NextRequest) {
@@ -68,6 +79,16 @@ export async function POST(request: NextRequest) {
       deliveryStatus: payload.STATUS ?? lead.deliveryStatus,
       deliveryStatusCode: payload.STATUS_CODE ?? lead.deliveryStatusCode,
       paymentStatus: payload.SITUATION ?? lead.paymentStatus,
+      deliverer:
+        payload.DELIVERY_AGENT ??
+        payload.DELIVERYMAN ??
+        payload.LIVREUR ??
+        lead.deliverer,
+      deliveryDate:
+        payload.DELIVERY_DATE ??
+        payload.DELIVERED_AT ??
+        payload.DELIVERY_TIME ??
+        lead.deliveryDate,
     });
 
     return NextResponse.json({ received: true, matched: true });

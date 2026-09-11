@@ -47,6 +47,12 @@ export type Lead = {
   deliveryStatusCode?: string;
   /** Statut de paiement remonte par ForceLog (champ SITUATION). */
   paymentStatus?: string;
+  /** Nom du livreur en charge du colis. */
+  deliverer?: string;
+  /** Telephone du livreur, pour les boutons appel et WhatsApp. */
+  delivererPhone?: string;
+  /** Date de livraison, format "AAAA-MM-JJ HH:MM" comme ForceLog. */
+  deliveryDate?: string;
   /**
    * Type d'expedition ForceLog :
    * - "simple" : marchandise expediee depuis notre depot
@@ -242,6 +248,26 @@ export const deliveryStatusStyles: Record<string, string> = {
   OUT_OF_AREA: "bg-gray-500 text-white",
   NO_ANSWER: "bg-gray-500 text-white",
 };
+
+/**
+ * Numero au format international attendu par wa.me : sans "+", sans
+ * espace ni separateur. Un numero marocain local (06.., 07..) est prefixe
+ * par l'indicatif 212, un numero deja international est garde tel quel.
+ */
+export function whatsappNumber(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.startsWith("212")) return digits;
+  if (digits.startsWith("0")) return `212${digits.slice(1)}`;
+  return digits;
+}
+
+export function whatsappHref(phone: string): string {
+  return `https://wa.me/${whatsappNumber(phone)}`;
+}
+
+export function telHref(phone: string): string {
+  return `tel:${phone.replace(/\s/g, "")}`;
+}
 
 /** Style des badges de statut de paiement (champ SITUATION de ForceLog). */
 export function paymentStatusStyle(situation: string): string {

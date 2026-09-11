@@ -51,12 +51,14 @@ import {
   type Lead,
   type LeadStatus,
 } from "./leads-data";
+import ContactButtons from "./ContactButtons";
 import RowActionsMenu from "./RowActionsMenu";
 import CreateCommandeModal from "./CreateCommandeModal";
 import OrderDetailsModal from "./OrderDetailsModal";
 import EditOrderModal from "./EditOrderModal";
 import ChangeStatusModal from "./ChangeStatusModal";
 import AssignModal from "./AssignModal";
+import DelivererModal from "./DelivererModal";
 import SelectDropdown from "./SelectDropdown";
 
 /** Transporteur integre a l'application. */
@@ -91,6 +93,7 @@ type ModalState =
   | { type: "edit"; lead: Lead }
   | { type: "status"; leadIds: string[] }
   | { type: "assign"; leadIds: string[] }
+  | { type: "deliverer"; lead: Lead }
   | null;
 
 export default function LeadsCommandesPage() {
@@ -430,6 +433,7 @@ export default function LeadsCommandesPage() {
       },
       onAssign: () => setModal({ type: "assign", leadIds: [lead.id] }),
       onChangeStatus: () => setModal({ type: "status", leadIds: [lead.id] }),
+      onSetDeliverer: () => setModal({ type: "deliverer", lead }),
       onDelete: () => deleteLead(lead.id),
       onSendToForceLog: () => sendToForceLog(lead),
     };
@@ -733,7 +737,7 @@ export default function LeadsCommandesPage() {
         )}
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1220px] text-left">
+          <table className="w-full min-w-[1520px] text-left">
             <thead>
               <tr className="border-b border-gray-100 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
                 <th className="w-10 px-5 py-3">
@@ -757,13 +761,15 @@ export default function LeadsCommandesPage() {
                 <th className="px-3 py-3">Code suivi</th>
                 <th className="px-3 py-3">Statut livraison</th>
                 <th className="px-3 py-3">Statut paiement</th>
+                <th className="px-3 py-3">Livreur</th>
+                <th className="px-3 py-3">Date de livraison</th>
                 <th className="w-10 px-3 py-3" />
               </tr>
             </thead>
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={13} className="px-5 py-12 text-center">
+                  <td colSpan={17} className="px-5 py-12 text-center">
                     <div className="flex flex-col items-center gap-2 text-gray-400">
                       <Loader2 className="h-6 w-6 animate-spin" />
                       <p className="text-[13px]">Chargement des commandes...</p>
@@ -773,7 +779,7 @@ export default function LeadsCommandesPage() {
               )}
               {!loading && visibleLeads.length === 0 && (
                 <tr>
-                  <td colSpan={13} className="px-5 py-12 text-center">
+                  <td colSpan={17} className="px-5 py-12 text-center">
                     <div className="flex flex-col items-center gap-2 text-gray-400">
                       <Inbox className="h-6 w-6" />
                       <p className="text-[13px]">
@@ -919,6 +925,32 @@ export default function LeadsCommandesPage() {
                       <span className="text-[12px] text-gray-300">&mdash;</span>
                     )}
                   </td>
+                  <td className="whitespace-nowrap px-3 py-3">
+                    {lead.deliverer ? (
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[12.5px] font-medium text-gray-700">
+                          {lead.deliverer}
+                        </span>
+                        {lead.delivererPhone && (
+                          <ContactButtons
+                            phone={lead.delivererPhone}
+                            label={lead.deliverer}
+                          />
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-[12px] text-gray-300">&mdash;</span>
+                    )}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3">
+                    {lead.deliveryDate ? (
+                      <span className="font-mono text-[12px] text-gray-600">
+                        {lead.deliveryDate}
+                      </span>
+                    ) : (
+                      <span className="text-[12px] text-gray-300">&mdash;</span>
+                    )}
+                  </td>
                   <td className="px-3 py-3">
                     <RowActionsMenu {...getRowActions(lead)} />
                   </td>
@@ -1024,6 +1056,27 @@ export default function LeadsCommandesPage() {
 
               <p className="mb-1 font-mono text-[12px] text-gray-400">{lead.date}</p>
 
+              {lead.deliverer && (
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-[12.5px] font-medium text-gray-700">
+                      {lead.deliverer}
+                    </p>
+                    {lead.deliveryDate && (
+                      <p className="font-mono text-[12px] text-gray-400">
+                        {lead.deliveryDate}
+                      </p>
+                    )}
+                  </div>
+                  {lead.delivererPhone && (
+                    <ContactButtons
+                      phone={lead.delivererPhone}
+                      label={lead.deliverer}
+                    />
+                  )}
+                </div>
+              )}
+
               <div className="mb-3">
                 {sendingToForceLog.has(lead.id) ? (
                   <span className="flex items-center gap-1.5 text-[12px] text-gray-400">
@@ -1103,6 +1156,16 @@ export default function LeadsCommandesPage() {
           lead={modal.lead}
           onClose={() => setModal(null)}
           onSave={() => setModal(null)}
+        />
+      )}
+      {modal?.type === "deliverer" && (
+        <DelivererModal
+          lead={modal.lead}
+          onClose={() => setModal(null)}
+          onApply={(changes) => {
+            void persistChanges([modal.lead.id], changes);
+            setModal(null);
+          }}
         />
       )}
       {modal?.type === "status" && (

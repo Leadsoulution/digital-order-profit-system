@@ -12,6 +12,7 @@ import {
   RefreshCw,
   Trash2,
   Truck,
+  Bike,
 } from "lucide-react";
 
 type RowActionsMenuProps = {
@@ -22,6 +23,7 @@ type RowActionsMenuProps = {
   onCopyContact: () => void;
   onAssign: () => void;
   onChangeStatus: () => void;
+  onSetDeliverer: () => void;
   onDelete: () => void;
   onSendToForceLog?: () => void;
 };
@@ -34,6 +36,7 @@ export default function RowActionsMenu({
   onCopyContact,
   onAssign,
   onChangeStatus,
+  onSetDeliverer,
   onDelete,
   onSendToForceLog,
 }: RowActionsMenuProps) {
@@ -61,6 +64,7 @@ export default function RowActionsMenu({
     [
       { label: "Assigner", icon: UserPlus, onClick: onAssign },
       { label: "Changer statut", icon: RefreshCw, onClick: onChangeStatus },
+      { label: "Livreur et livraison", icon: Bike, onClick: onSetDeliverer },
       ...(onSendToForceLog
         ? [{ label: "Envoyer vers ForceLog", icon: Truck, onClick: onSendToForceLog }]
         : []),
