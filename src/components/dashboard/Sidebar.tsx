@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -82,15 +83,20 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         }`}
       >
       <div className="flex items-center justify-between gap-2.5 px-5 py-5">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-            <ShoppingCart className="h-4 w-4 text-white" />
-          </div>
-          <div className="leading-tight">
-            <p className="text-[15px] font-semibold text-white">Lead2Door</p>
-            <p className="text-[11px] text-slate-500">From Lead to Door</p>
-          </div>
-        </div>
+        {/*
+          Le fond du logo a ete detoure : il se pose directement sur le
+          #0B1120 de la barre laterale, sans rectangle visible.
+        */}
+        <Link href="/" className="min-w-0">
+          <Image
+            src="/logo-orderly.png"
+            alt="Orderly - Gestion des commandes"
+            width={720}
+            height={168}
+            priority
+            className="h-9 w-auto lg:h-10"
+          />
+        </Link>
         <button
           onClick={onClose}
           className="rounded-md p-1 text-slate-400 hover:bg-white/5 hover:text-slate-200 lg:hidden"
