@@ -54,6 +54,12 @@ export async function dispatchToForceLog(
  * Recupere les statuts ForceLog des colis recents et renvoie, pour chaque
  * commande suivie, les changements a enregistrer.
  *
+ * Regle importante : seuls le statut de livraison et le statut de
+ * paiement sont mis a jour. Le statut de confirmation (`status`) reste la
+ * propriete de l'equipe de confirmation et ne doit JAMAIS etre deduit de
+ * l'etat du transporteur — un colis refuse a la livraison reste une
+ * commande qui avait bien ete confirmee. Un test verrouille cette regle.
+ *
  * Rappel de la contrainte API : ForceLog ignore ses propres filtres et ne
  * renvoie que les 20 colis les plus recents, donc seules les commandes
  * presentes dans ce lot peuvent etre rafraichies.
