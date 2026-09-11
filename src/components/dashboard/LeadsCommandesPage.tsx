@@ -1007,7 +1007,10 @@ export default function LeadsCommandesPage() {
       </button>
 
       {modal?.type === "create" && (
-        <CreateCommandeModal onClose={() => setModal(null)} />
+        <CreateCommandeModal
+          onClose={() => setModal(null)}
+          onCreated={(lead) => setLeadsState((prev) => [lead, ...prev])}
+        />
       )}
       {modal?.type === "details" && (
         <OrderDetailsModal

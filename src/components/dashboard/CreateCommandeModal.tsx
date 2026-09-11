@@ -13,8 +13,10 @@ import {
   User,
   Tag,
   Package,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
-import { agents, moroccanCities } from "./leads-data";
+import { agents, moroccanCities, type Lead } from "./leads-data";
 import SelectDropdown from "./SelectDropdown";
 
 const products = [
@@ -44,10 +46,22 @@ const products = [
   },
 ];
 
+/** Reference auto si l'utilisateur n'en saisit pas, au format des existantes. */
+function generateReference() {
+  const now = new Date();
+  const suffix = `${String(now.getMonth() + 1).padStart(2, "0")}${String(
+    now.getDate()
+  ).padStart(2, "0")}`;
+  const random = Math.random().toString(36).slice(2, 7).toUpperCase();
+  return `MO-${random}-${suffix}`;
+}
+
 export default function CreateCommandeModal({
   onClose,
+  onCreated,
 }: {
   onClose: () => void;
+  onCreated?: (lead: Lead) => void;
 }) {
   const [selected, setSelected] = useState<string[]>([]);
   const [champsAvances, setChampsAvances] = useState(false);
@@ -56,10 +70,79 @@ export default function CreateCommandeModal({
     "whatsapp"
   );
 
+  const [client, setClient] = useState("");
+  const [phone, setPhone] = useState("");
+  const [reference, setReference] = useState("");
+  const [total, setTotal] = useState("0");
+  const [ville, setVille] = useState("");
+  const [adresse, setAdresse] = useState("");
+  const [assignedTo, setAssignedTo] = useState("");
+  const [productQuery, setProductQuery] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   function toggleProduct(id: string) {
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
     );
+  }
+
+  const selectedProducts = products.filter((p) => selected.includes(p.id));
+  const visibleProducts = productQuery.trim()
+    ? products.filter((p) =>
+        p.name.toLowerCase().includes(productQuery.trim().toLowerCase())
+      )
+    : products;
+
+  const catalogueSubtotal = selectedProducts.reduce((sum, p) => {
+    const value = Number.parseFloat(p.price.replace(/[^\d.]/g, ""));
+    return sum + (Number.isFinite(value) ? value : 0);
+  }, 0);
+
+  async function submit() {
+    if (!client.trim() || !phone.trim()) {
+      setError("Le nom du client et le telephone sont obligatoires.");
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reference: reference.trim() || generateReference(),
+          client: client.trim(),
+          phone: phone.trim(),
+          productName: selectedProducts.map((p) => p.name).join(", "),
+          productLabel: selectedProducts[0]?.name.slice(0, 4).toUpperCase() ?? "",
+          itemCount: selectedProducts.length > 1 ? selectedProducts.length : undefined,
+          amount: `${total.replace(/[^\d.]/g, "") || "0"} MAD`,
+          ville: ville || undefined,
+          adresse: adresse.trim() || undefined,
+          assignedTo: assignedTo || "",
+          status: "Nouveau",
+          shipping: "En attente",
+          source: "Agent Manual",
+          date: new Date().toLocaleDateString("fr-FR", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Creation impossible.");
+      onCreated?.(data.lead);
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Creation impossible.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -100,6 +183,8 @@ export default function CreateCommandeModal({
                 </label>
                 <input
                   type="text"
+                  value={client}
+                  onChange={(e) => setClient(e.target.value)}
                   placeholder="Yassine El Idrissi"
                   className="w-full rounded-lg border border-blue-400 px-3 py-2 text-[13px] text-gray-800 placeholder:text-gray-400 focus:outline-none"
                 />
@@ -110,6 +195,8 @@ export default function CreateCommandeModal({
                 </label>
                 <input
                   type="text"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                   placeholder="06 12 34 56 78"
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-[13px] text-gray-800 placeholder:text-gray-400 focus:border-blue-400 focus:outline-none"
                 />
@@ -224,6 +311,8 @@ export default function CreateCommandeModal({
                 </label>
                 <input
                   type="text"
+                  value={reference}
+                  onChange={(e) => setReference(e.target.value)}
                   placeholder="Laisser vide pour generation"
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-[13px] text-gray-800 placeholder:text-gray-400 focus:border-blue-400 focus:outline-none"
                 />
@@ -256,13 +345,15 @@ export default function CreateCommandeModal({
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
+                value={productQuery}
+                onChange={(e) => setProductQuery(e.target.value)}
                 placeholder="Rechercher des produits"
                 className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-[13px] text-gray-800 placeholder:text-gray-400 focus:border-blue-400 focus:outline-none"
               />
             </div>
 
             <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
-              {products.map((product) => {
+              {visibleProducts.map((product) => {
                 const isSelected = selected.includes(product.id);
                 return (
                   <button
@@ -305,8 +396,12 @@ export default function CreateCommandeModal({
                 <p className="text-[11px] font-semibold tracking-wide text-gray-500">
                   SOUS-TOTAL CATALOGUE
                 </p>
-                <p className="mt-1 text-[13px] font-medium text-gray-400">
-                  —
+                <p
+                  className={`mt-1 text-[13px] font-medium ${
+                    catalogueSubtotal > 0 ? "font-mono text-gray-800" : "text-gray-400"
+                  }`}
+                >
+                  {catalogueSubtotal > 0 ? `${catalogueSubtotal} MAD` : "—"}
                 </p>
               </div>
               <div>
@@ -316,7 +411,8 @@ export default function CreateCommandeModal({
                 <div className="mt-1 flex items-center gap-2">
                   <input
                     type="text"
-                    defaultValue="0"
+                    value={total}
+                    onChange={(e) => setTotal(e.target.value)}
                     className="w-20 rounded-md border border-gray-200 px-2 py-1 font-mono text-[13px] text-gray-800 focus:border-blue-400 focus:outline-none"
                   />
                   <span className="text-[13px] text-gray-500">MAD</span>
@@ -339,6 +435,7 @@ export default function CreateCommandeModal({
                   variant="field"
                   pinnedLabel="Aucune ville"
                   options={moroccanCities}
+                  onSelect={setVille}
                   searchable
                   searchPlaceholder="Rechercher une ville..."
                 />
@@ -349,6 +446,8 @@ export default function CreateCommandeModal({
                 </label>
                 <input
                   type="text"
+                  value={adresse}
+                  onChange={(e) => setAdresse(e.target.value)}
                   placeholder="Rue Abou Al Waqt, Immeuble 12, App 4"
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-[13px] text-gray-800 placeholder:text-gray-400 focus:border-blue-400 focus:outline-none"
                 />
@@ -365,6 +464,7 @@ export default function CreateCommandeModal({
               variant="field"
               pinnedLabel="Laisser non assigne"
               options={agents}
+              onSelect={setAssignedTo}
             />
           </div>
 
@@ -395,16 +495,30 @@ export default function CreateCommandeModal({
           </button>
         </div>
 
-        <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 px-5 py-4 sm:flex-row sm:justify-end">
-          <button
-            onClick={onClose}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50 sm:w-auto"
-          >
-            Annuler
-          </button>
-          <button className="w-full rounded-lg bg-gray-900 px-4 py-2 text-[13px] font-medium text-white hover:bg-gray-800 sm:w-auto">
-            Creer commande
-          </button>
+        <div className="border-t border-gray-100 px-5 py-4">
+          {error && (
+            <p className="mb-3 flex items-start gap-1.5 rounded-lg bg-red-50 px-3 py-2 text-[12.5px] font-medium text-red-600">
+              <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              {error}
+            </p>
+          )}
+          <div className="flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end">
+            <button
+              onClick={onClose}
+              disabled={saving}
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60 sm:w-auto"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={submit}
+              disabled={saving}
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-gray-900 px-4 py-2 text-[13px] font-medium text-white hover:bg-gray-800 disabled:opacity-60 sm:w-auto"
+            >
+              {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {saving ? "Creation..." : "Creer commande"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
