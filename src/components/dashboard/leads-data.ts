@@ -40,6 +40,12 @@ export type Lead = {
   adresse?: string;
   trackingNumber?: string;
   trackingError?: string;
+  /** Libelle du statut de livraison remonte par ForceLog. */
+  deliveryStatus?: string;
+  /** Code machine du statut de livraison ForceLog (sert au style du badge). */
+  deliveryStatusCode?: string;
+  /** Statut de paiement remonte par ForceLog (champ SITUATION). */
+  paymentStatus?: string;
 };
 
 export const leads: Lead[] = [
@@ -206,6 +212,35 @@ export const sourceBadgeStyles: Record<LeadSource, string> = {
   "Landing page": "bg-blue-50 text-blue-600",
   Lightfunnels: "bg-blue-50 text-blue-600",
 };
+
+/**
+ * Style des badges de statut de livraison, par code ForceLog.
+ * Codes observes sur l'API reelle : NEW_PARCEL, WAITING_PICKUP, SENT,
+ * DISTRIBUTION, DELIVERED, RETURNED, REFUSE, CANCELED, RELAUNCH,
+ * OUT_OF_AREA, NO_ANSWER.
+ */
+export const deliveryStatusStyles: Record<string, string> = {
+  NEW_PARCEL: "bg-sky-500 text-white",
+  WAITING_PICKUP: "bg-amber-500 text-white",
+  SENT: "bg-blue-600 text-white",
+  DISTRIBUTION: "bg-indigo-500 text-white",
+  DELIVERED: "bg-emerald-600 text-white",
+  RETURNED: "bg-orange-500 text-white",
+  REFUSE: "bg-red-600 text-white",
+  CANCELED: "bg-red-600 text-white",
+  RELAUNCH: "bg-violet-500 text-white",
+  OUT_OF_AREA: "bg-gray-500 text-white",
+  NO_ANSWER: "bg-gray-500 text-white",
+};
+
+/** Style des badges de statut de paiement (champ SITUATION de ForceLog). */
+export function paymentStatusStyle(situation: string): string {
+  const value = situation.toLowerCase();
+  if (value.includes("non pay")) return "bg-red-50 text-red-600";
+  if (value.includes("factur")) return "bg-emerald-50 text-emerald-600";
+  if (value.includes("pay")) return "bg-emerald-600 text-white";
+  return "bg-gray-100 text-gray-600";
+}
 
 export const statusBadgeStyles: Record<LeadStatus, string> = {
   Nouveau: "bg-sky-500 text-white",

@@ -31,10 +31,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const parcel = await addParcel(apiKey, mapOrderToParcel(order));
-    return NextResponse.json({
-      trackingNumber: parcel.TRACKING_NUMBER,
-      code: parcel.CODE,
-    });
+    // ForceLog n'expose pas d'identifiant interne distinct : le numero de
+    // suivi est la seule reference exploitable.
+    return NextResponse.json({ trackingNumber: parcel.TRACKING_NUMBER });
   } catch (error) {
     const message =
       error instanceof ForceLogApiError

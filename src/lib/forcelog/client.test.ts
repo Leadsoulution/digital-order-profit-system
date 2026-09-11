@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { addParcel, checkHealth, getCities, getTracking } from "./client";
+import {
+  addParcel,
+  checkHealth,
+  getCities,
+  getRecentParcelStatuses,
+  getTracking,
+} from "./client";
 import { ForceLogApiError } from "./types";
 
 const API_KEY = "test-key";
@@ -116,17 +122,24 @@ describe("forcelog client", () => {
   });
 
   describe("addParcel", () => {
-    it("sends a POST with a JSON body and the API key header", async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(
-        jsonResponse({
-          AUTH: AUTH_OK,
-          "ADD-PARCEL": {
-            RESULT: "SUCCESS",
-            CODE: "PARCEL-1",
-            TRACKING_NUMBER: "TRK-1",
-          },
-        })
-      );
+    // Shape verified against the live API: the created parcel sits under
+    // ADD-PARCEL.NEW-PARCEL, not flat in the operation block like the
+    // other endpoints.
+    const ADD_PARCEL_OK = {
+      AUTH: AUTH_OK,
+      "ADD-PARCEL": {
+        RESULT: "SUCCESS",
+        MESSAGE: "New Parcel Added Successfully",
+        "NEW-PARCEL": {
+          TRACKING_NUMBER: "F-MRK196GYJH9X",
+          ORDER_NUM: "spc-1003",
+          RECEIVER: "soufiane imil",
+        },
+      },
+    };
+
+    it("unwraps the tracking number from the nested NEW-PARCEL block", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(ADD_PARCEL_OK));
 
       const result = await addParcel(API_KEY, {
         ORDER_NUM: "spc-1003",
@@ -136,7 +149,7 @@ describe("forcelog client", () => {
         ADDRESS: "Oujda",
       });
 
-      expect(result.TRACKING_NUMBER).toBe("TRK-1");
+      expect(result.TRACKING_NUMBER).toBe("F-MRK196GYJH9X");
 
       const [url, init] = vi.mocked(fetch).mock.calls[0];
       expect(String(url)).toContain("/Parcels/AddParcel");
@@ -144,6 +157,60 @@ describe("forcelog client", () => {
       expect(JSON.parse(init?.body as string)).toMatchObject({
         ORDER_NUM: "spc-1003",
       });
+    });
+
+    it("throws rather than returning an order with no tracking number", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce(
+        jsonResponse({
+          AUTH: AUTH_OK,
+          "ADD-PARCEL": { RESULT: "SUCCESS", MESSAGE: "ok" },
+        })
+      );
+      await expect(
+        addParcel(API_KEY, {
+          ORDER_NUM: "x",
+          RECEIVER: "x",
+          PHONE: "0600000000",
+          CITY: "Marrakech",
+          ADDRESS: "x",
+        })
+      ).rejects.toThrow("numero de suivi");
+    });
+  });
+
+  describe("getRecentParcelStatuses", () => {
+    it("indexes delivery and payment status by tracking number", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce(
+        jsonResponse({
+          AUTH: AUTH_OK,
+          "GET-PARCELS": {
+            RESULT: "SUCCESS",
+            PARCELS: [
+              {
+                TRACKING_NUMBER: "F-AAA",
+                STATUS: "Livre",
+                STATUS_CODE: "DELIVERED",
+                SITUATION: "Facture",
+              },
+              {
+                TRACKING_NUMBER: "F-BBB",
+                STATUS: "En cours de livraison",
+                STATUS_CODE: "DISTRIBUTION",
+                SITUATION: "Non Paye",
+              },
+            ],
+          },
+        })
+      );
+
+      const statuses = await getRecentParcelStatuses(API_KEY);
+      expect(statuses.get("F-AAA")).toEqual({
+        status: "Livre",
+        statusCode: "DELIVERED",
+        situation: "Facture",
+      });
+      expect(statuses.get("F-BBB")?.statusCode).toBe("DISTRIBUTION");
+      expect(statuses.size).toBe(2);
     });
   });
 

@@ -1,27 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
+import { findLeadByTrackingNumber, updateLead } from "@/lib/supabase/leads";
+import { isSupabaseServerConfigured } from "@/lib/supabase/server";
 
 /**
- * Receives parcel status push notifications from ForceLog.
+ * Recoit les notifications de changement de statut envoyees par ForceLog.
  *
- * ForceLog's REST docs don't specify a webhook payload shape or a
- * signing scheme, so this accepts a tracking-event-like body and
- * optionally checks a shared secret configured on both sides via
- * FORCELOG_WEBHOOK_SECRET (sent back as `X-Webhook-Secret`). Leave the
- * env var empty to accept unauthenticated calls during setup/testing.
+ * ForceLog ne documente ni format de payload ni signature, donc on accepte
+ * un evenement proche de la forme des colis renvoyes par GetParcels et on
+ * protege l'endpoint par un secret partage optionnel
+ * (FORCELOG_WEBHOOK_SECRET, transmis en en-tete `X-Webhook-Secret`).
+ * Laisser la variable vide accepte les appels non authentifies, utile le
+ * temps de la mise en place.
  *
- * This app has no database, so there is nothing durable to update yet —
- * this endpoint validates and logs the event so it's ready to wire into
- * real order storage once one exists.
+ * C'est le chemin qui permet de mettre a jour un colis au-dela des 20 plus
+ * recents, seuls accessibles en lecture via l'API.
  */
 
 type ForceLogWebhookPayload = {
-  CODE?: string;
   TRACKING_NUMBER?: string;
+  CODE?: string;
   ORDER_NUM?: string;
+  STATUS?: string;
   STATUS_CODE?: string;
-  STATUS_NAME?: string;
-  CITY_NAME?: string;
-  TIMESTAMP?: number;
+  SITUATION?: string;
 };
 
 export async function POST(request: NextRequest) {
@@ -43,16 +44,39 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!payload.TRACKING_NUMBER && !payload.CODE) {
+  const trackingNumber = payload.TRACKING_NUMBER ?? payload.CODE;
+  if (!trackingNumber) {
     return NextResponse.json(
       { error: "Evenement invalide : TRACKING_NUMBER ou CODE requis." },
       { status: 400 }
     );
   }
 
-  console.log("[forcelog-webhook] statut recu", payload);
+  if (!isSupabaseServerConfigured) {
+    return NextResponse.json({ error: "Supabase non configure." }, { status: 500 });
+  }
 
-  return NextResponse.json({ received: true });
+  try {
+    const lead = await findLeadByTrackingNumber(trackingNumber);
+    if (!lead) {
+      // 200 volontaire : le colis n'appartient pas a cette application,
+      // ce n'est pas une erreur pour ForceLog qui n'a pas a reessayer.
+      return NextResponse.json({ received: true, matched: false });
+    }
+
+    await updateLead(lead.id, {
+      deliveryStatus: payload.STATUS ?? lead.deliveryStatus,
+      deliveryStatusCode: payload.STATUS_CODE ?? lead.deliveryStatusCode,
+      paymentStatus: payload.SITUATION ?? lead.paymentStatus,
+    });
+
+    return NextResponse.json({ received: true, matched: true });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Erreur inattendue." },
+      { status: 500 }
+    );
+  }
 }
 
 export async function GET() {

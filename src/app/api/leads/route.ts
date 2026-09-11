@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLead, listLeads, updateLeads } from "@/lib/supabase/leads";
+import { createLead, listLeads, updateLead, updateLeads } from "@/lib/supabase/leads";
 import { isSupabaseServerConfigured } from "@/lib/supabase/server";
+import { AUTO_DISPATCH_STATUS, dispatchToForceLog } from "@/lib/forcelog/dispatch";
 
 function notConfigured() {
   return NextResponse.json(
@@ -68,7 +69,25 @@ export async function PATCH(request: NextRequest) {
   }
 
   try {
-    return NextResponse.json({ leads: await updateLeads(ids, changes) });
+    const updated = await updateLeads(ids, changes);
+
+    // Passage en "Confirme" : la commande part automatiquement chez
+    // ForceLog, sauf si elle y a deja ete envoyee. Un echec transporteur
+    // est enregistre dans `trackingError` et n'annule pas le changement
+    // de statut.
+    if (changes.status === AUTO_DISPATCH_STATUS) {
+      const dispatched = await Promise.all(
+        updated
+          .filter((lead) => !lead.trackingNumber)
+          .map(async (lead) => updateLead(lead.id, await dispatchToForceLog(lead)))
+      );
+      const byId = new Map(dispatched.map((lead) => [lead.id, lead]));
+      return NextResponse.json({
+        leads: updated.map((lead) => byId.get(lead.id) ?? lead),
+      });
+    }
+
+    return NextResponse.json({ leads: updated });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Erreur inattendue." },

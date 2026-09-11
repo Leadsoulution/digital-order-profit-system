@@ -30,6 +30,9 @@ type LeadRow = {
   adresse: string | null;
   tracking_number: string | null;
   tracking_error: string | null;
+  delivery_status: string | null;
+  delivery_status_code: string | null;
+  payment_status: string | null;
 };
 
 function toLead(row: LeadRow): Lead {
@@ -53,6 +56,9 @@ function toLead(row: LeadRow): Lead {
     adresse: row.adresse ?? undefined,
     trackingNumber: row.tracking_number ?? undefined,
     trackingError: row.tracking_error ?? undefined,
+    deliveryStatus: row.delivery_status ?? undefined,
+    deliveryStatusCode: row.delivery_status_code ?? undefined,
+    paymentStatus: row.payment_status ?? undefined,
   };
 }
 
@@ -78,11 +84,17 @@ function toRow(lead: Partial<Lead>): Partial<LeadRow> {
     row.tracking_number = lead.trackingNumber ?? null;
   if (lead.trackingError !== undefined)
     row.tracking_error = lead.trackingError ?? null;
+  if (lead.deliveryStatus !== undefined)
+    row.delivery_status = lead.deliveryStatus ?? null;
+  if (lead.deliveryStatusCode !== undefined)
+    row.delivery_status_code = lead.deliveryStatusCode ?? null;
+  if (lead.paymentStatus !== undefined)
+    row.payment_status = lead.paymentStatus ?? null;
   return row;
 }
 
 const COLUMNS =
-  "id,reference,product_label,product_name,item_count,client,phone,source,assigned_to,amount,status,shipping,date,ville,tarif,quartier,adresse,tracking_number,tracking_error";
+  "id,reference,product_label,product_name,item_count,client,phone,source,assigned_to,amount,status,shipping,date,ville,tarif,quartier,adresse,tracking_number,tracking_error,delivery_status,delivery_status_code,payment_status";
 
 export async function listLeads(): Promise<Lead[]> {
   const supabase = getSupabaseServerClient();
@@ -97,6 +109,21 @@ export async function listLeads(): Promise<Lead[]> {
 
   if (error) throw new Error(error.message);
   return (data as LeadRow[]).map(toLead);
+}
+
+/** Retrouve une commande par son numero de suivi ForceLog (pour le webhook). */
+export async function findLeadByTrackingNumber(
+  trackingNumber: string
+): Promise<Lead | null> {
+  const supabase = getSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("leads")
+    .select(COLUMNS)
+    .eq("tracking_number", trackingNumber)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return data ? toLead(data as LeadRow) : null;
 }
 
 export async function createLead(lead: Partial<Lead>): Promise<Lead> {

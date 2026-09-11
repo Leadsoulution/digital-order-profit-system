@@ -131,15 +131,29 @@ export async function getCities(apiKey: string): Promise<ForceLogCities> {
   return data.Cities;
 }
 
-export function addParcel(
+/**
+ * Cree un colis et renvoie le colis cree.
+ *
+ * Verifie sur l'API reelle : la reponse imbrique le colis sous
+ * `ADD-PARCEL.NEW-PARCEL`, et non a plat dans le bloc d'operation comme
+ * les autres endpoints — d'ou le deballage explicite ici.
+ */
+export async function addParcel(
   apiKey: string,
   params: AddParcelParams
 ): Promise<ForceLogParcel> {
-  return forceLogRequest<ForceLogParcel>(apiKey, {
+  const data = await forceLogRequest<{ "NEW-PARCEL"?: ForceLogParcel }>(apiKey, {
     method: "POST",
     path: "/Parcels/AddParcel",
     body: params,
   });
+  const parcel = data["NEW-PARCEL"];
+  if (!parcel?.TRACKING_NUMBER) {
+    throw new ForceLogApiError(
+      "ForceLog n'a pas renvoye de numero de suivi pour ce colis."
+    );
+  }
+  return parcel;
 }
 
 export function getParcel(apiKey: string, code: string): Promise<ForceLogParcel> {
@@ -169,6 +183,17 @@ export function getParcelLabel(
   });
 }
 
+/**
+ * Liste les colis recents.
+ *
+ * Important, verifie sur l'API reelle : tous les filtres documentes
+ * (CODE, ORDER_NUM, PHONE, STATUS) ainsi que PAGE et LIMIT sont
+ * **ignores** par ForceLog. L'endpoint renvoie invariablement les 20
+ * colis les plus recents. Les parametres sont tout de meme transmis au
+ * cas ou ForceLog les implementerait plus tard, mais aucun appelant ne
+ * doit compter dessus : la correspondance se fait cote application, par
+ * numero de suivi.
+ */
 export function getParcels(
   apiKey: string,
   filters: {
@@ -198,6 +223,29 @@ export function getParcels(
       },
     }
   );
+}
+
+/**
+ * Renvoie, pour les colis recents, le statut de livraison et le statut de
+ * paiement, indexes par numero de suivi.
+ */
+export async function getRecentParcelStatuses(
+  apiKey: string
+): Promise<Map<string, { status: string; statusCode: string; situation: string }>> {
+  const { PARCELS } = await getParcels(apiKey);
+  const map = new Map<
+    string,
+    { status: string; statusCode: string; situation: string }
+  >();
+  for (const parcel of PARCELS ?? []) {
+    if (!parcel.TRACKING_NUMBER) continue;
+    map.set(parcel.TRACKING_NUMBER, {
+      status: parcel.STATUS ?? "",
+      statusCode: parcel.STATUS_CODE ?? "",
+      situation: parcel.SITUATION ?? "",
+    });
+  }
+  return map;
 }
 
 export function relaunch(

@@ -49,6 +49,8 @@ import {
   dateRanges,
   sourceBadgeStyles,
   statusBadgeStyles,
+  deliveryStatusStyles,
+  paymentStatusStyle,
   agents,
   expeditionStatuses,
   sourceOptions,
@@ -134,6 +136,27 @@ export default function LeadsCommandesPage() {
             ? loaded.find((l) => l.id === deepLinkLeadId.current)
             : undefined;
           if (lead) setModal({ type: "details", lead });
+
+          // Rafraichit en arriere-plan les statuts de livraison depuis
+          // ForceLog, sans bloquer l'affichage de la liste.
+          if (loaded.some((l) => l.trackingNumber)) {
+            fetch("/api/leads/sync", { method: "POST" })
+              .then((res) => res.json())
+              .then((sync) => {
+                if (cancelled || !sync.updated?.length) return;
+                setLeadsState((prev) =>
+                  prev.map((l) => {
+                    const fresh = (sync.updated as Lead[]).find(
+                      (u) => u.id === l.id
+                    );
+                    return fresh ?? l;
+                  })
+                );
+              })
+              .catch(() => {
+                /* Synchronisation silencieuse : ne derange pas l'ecran. */
+              });
+          }
         }
       })
       .catch(() => {
@@ -663,6 +686,8 @@ export default function LeadsCommandesPage() {
                 <th className="px-3 py-3">Expedition</th>
                 <th className="px-3 py-3">Date</th>
                 <th className="px-3 py-3">Code suivi</th>
+                <th className="px-3 py-3">Statut livraison</th>
+                <th className="px-3 py-3">Statut paiement</th>
                 <th className="w-10 px-3 py-3" />
               </tr>
             </thead>
@@ -790,6 +815,31 @@ export default function LeadsCommandesPage() {
                       >
                         <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                         <span className="truncate">{lead.trackingError}</span>
+                      </span>
+                    ) : (
+                      <span className="text-[12px] text-gray-300">&mdash;</span>
+                    )}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3">
+                    {lead.deliveryStatus ? (
+                      <span
+                        className={`rounded-md px-2 py-1 text-[12px] font-medium ${
+                          deliveryStatusStyles[lead.deliveryStatusCode ?? ""] ??
+                          "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {lead.deliveryStatus}
+                      </span>
+                    ) : (
+                      <span className="text-[12px] text-gray-300">&mdash;</span>
+                    )}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3">
+                    {lead.paymentStatus ? (
+                      <span
+                        className={`rounded-md px-2 py-1 text-[12px] font-medium ${paymentStatusStyle(lead.paymentStatus)}`}
+                      >
+                        {lead.paymentStatus}
                       </span>
                     ) : (
                       <span className="text-[12px] text-gray-300">&mdash;</span>

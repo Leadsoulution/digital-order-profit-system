@@ -38,16 +38,23 @@ export type AddParcelParams = {
 };
 
 export type ForceLogParcel = {
-  CODE: string;
   TRACKING_NUMBER: string;
   ORDER_NUM?: string;
-  STATUS?: ForceLogParcelStatus;
-  COD?: number;
-  DELIVERY_FEES?: number;
+  /** Libelle francais du statut de livraison, ex. "En cours de livraison". */
+  STATUS?: string;
+  /** Code machine du statut, ex. "DISTRIBUTION", "DELIVERED". */
+  STATUS_CODE?: string;
+  /** Statut de paiement, ex. "Non Paye", "Facture". */
+  SITUATION?: string;
+  PRICE?: string;
+  DELIVERY_FEES?: number | null;
   RECEIVER?: string;
   PHONE?: string;
-  CITY?: string;
+  CITY_NAME?: string;
   ADDRESS?: string;
+  COMMENT?: string;
+  PRODUCT_NATURE?: string;
+  CREATION_TIME?: string;
 };
 
 export type ForceLogTrackingEvent = {
