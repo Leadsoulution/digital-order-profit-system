@@ -24,22 +24,26 @@ type SingleSelectProps = BaseProps & {
 
 type MultiSelectProps = BaseProps & {
   multi: true;
+  /** Appelee a chaque changement de selection, avec la liste complete. */
+  onMultiChange?: (values: string[]) => void;
 };
 
 type SelectDropdownProps = SingleSelectProps | MultiSelectProps;
 
-export default function SelectDropdown({
-  variant = "filter",
-  icon: Icon,
-  panelTitle,
-  pinnedLabel,
-  options,
-  multi,
-  searchable,
-  searchPlaceholder = "Rechercher...",
-  value,
-  onSelect,
-}: SelectDropdownProps) {
+export default function SelectDropdown(props: SelectDropdownProps) {
+  const {
+    variant = "filter",
+    icon: Icon,
+    panelTitle,
+    pinnedLabel,
+    options,
+    multi,
+    searchable,
+    searchPlaceholder = "Rechercher...",
+    value,
+    onSelect,
+  } = props;
+  const onMultiChange = multi ? props.onMultiChange : undefined;
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [internalSelected, setInternalSelected] = useState<string | null>(null);
@@ -77,9 +81,20 @@ export default function SelectDropdown({
     : (selected ?? pinnedLabel);
 
   function toggleMultiOption(option: string) {
-    setMultiSelected((prev) =>
-      prev.includes(option) ? prev.filter((o) => o !== option) : [...prev, option]
-    );
+    // La nouvelle valeur est calculee avant l'appel a setState : prevenir
+    // le parent depuis l'interieur d'une fonction de mise a jour
+    // declencherait un setState du parent pendant le rendu de ce
+    // composant, ce que React signale comme une erreur.
+    const next = multiSelected.includes(option)
+      ? multiSelected.filter((o) => o !== option)
+      : [...multiSelected, option];
+    setMultiSelected(next);
+    onMultiChange?.(next);
+  }
+
+  function clearMultiSelection() {
+    setMultiSelected([]);
+    onMultiChange?.([]);
   }
 
   const triggerClasses =
@@ -149,7 +164,7 @@ export default function SelectDropdown({
 
             {multi && (
               <button
-                onClick={() => setMultiSelected([])}
+                onClick={clearMultiSelection}
                 className={`flex w-full items-center gap-2 px-3 py-2 text-left text-[12.5px] ${
                   multiSelected.length === 0
                     ? "bg-blue-50 font-medium text-blue-600"

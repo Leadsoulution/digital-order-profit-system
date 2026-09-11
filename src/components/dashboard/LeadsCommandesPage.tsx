@@ -14,10 +14,7 @@ import {
   User,
   Tag,
   Package,
-  AlertTriangle,
-  Clock,
   Wallet,
-  FileText,
   Inbox,
   Eye,
   Phone,
@@ -51,14 +48,6 @@ import {
   statusBadgeStyles,
   deliveryStatusStyles,
   paymentStatusStyle,
-  agents,
-  expeditionStatuses,
-  sourceOptions,
-  productNames,
-  attentionLevels,
-  reminderDueOptions,
-  amountRanges,
-  notesOptions,
   type Lead,
   type LeadStatus,
 } from "./leads-data";
@@ -113,6 +102,14 @@ export default function LeadsCommandesPage() {
   const [activeTab, setActiveTab] = useState("Tous");
   const [activeRange, setActiveRange] = useState("Tout");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    produits: [] as string[],
+    sources: [] as string[],
+    agents: [] as string[],
+    confirmation: [] as string[],
+    livraison: [] as string[],
+    paiement: [] as string[],
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sendingToForceLog, setSendingToForceLog] = useState<Set<string>>(new Set());
@@ -190,15 +187,44 @@ export default function LeadsCommandesPage() {
     ? leadsState.filter((lead) => lead.status === activeTabDef.status)
     : leadsState;
 
+  // Les options proposees sont celles reellement presentes dans les
+  // commandes chargees : inutile de proposer un filtre qui ne renverrait
+  // jamais rien, et les statuts transporteur evoluent de leur cote.
+  const uniqueValues = (pick: (lead: Lead) => string | undefined) =>
+    [...new Set(leadsState.map(pick).filter((v): v is string => Boolean(v)))].sort();
+
+  const filterOptions = {
+    produits: uniqueValues((l) => l.productName),
+    sources: uniqueValues((l) => l.source),
+    agents: uniqueValues((l) => l.assignedTo),
+    confirmation: uniqueValues((l) => l.status),
+    livraison: uniqueValues((l) => l.deliveryStatus),
+    paiement: uniqueValues((l) => l.paymentStatus),
+  };
+
+  // Un filtre vide ne restreint rien ; plusieurs valeurs dans un meme
+  // filtre s'additionnent (OU), et les differents filtres se cumulent (ET).
+  const matchesFilters = (lead: Lead) =>
+    (filters.produits.length === 0 ||
+      filters.produits.includes(lead.productName)) &&
+    (filters.sources.length === 0 || filters.sources.includes(lead.source)) &&
+    (filters.agents.length === 0 || filters.agents.includes(lead.assignedTo)) &&
+    (filters.confirmation.length === 0 ||
+      filters.confirmation.includes(lead.status)) &&
+    (filters.livraison.length === 0 ||
+      filters.livraison.includes(lead.deliveryStatus ?? "")) &&
+    (filters.paiement.length === 0 ||
+      filters.paiement.includes(lead.paymentStatus ?? ""));
+
   const query = searchQuery.trim().toLowerCase();
-  const visibleLeads = query
-    ? filteredLeads.filter(
-        (lead) =>
-          lead.reference.toLowerCase().includes(query) ||
-          lead.client.toLowerCase().includes(query) ||
-          lead.phone.includes(query)
-      )
-    : filteredLeads;
+  const visibleLeads = filteredLeads.filter(
+    (lead) =>
+      matchesFilters(lead) &&
+      (!query ||
+        lead.reference.toLowerCase().includes(query) ||
+        lead.client.toLowerCase().includes(query) ||
+        lead.phone.includes(query))
+  );
 
   const allVisibleSelected =
     visibleLeads.length > 0 && visibleLeads.every((l) => selectedIds.has(l.id));
@@ -528,62 +554,55 @@ export default function LeadsCommandesPage() {
       {filtersOpen && (
         <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
           <SelectDropdown
-            icon={Truck}
-            panelTitle="Expedition"
-            pinnedLabel="Tous Expedition"
-            options={expeditionStatuses}
-          />
-          <SelectDropdown
-            icon={User}
-            panelTitle="Agent assigne"
-            pinnedLabel="Non assigne"
-            options={agents}
+            icon={Package}
+            panelTitle="Produits"
+            pinnedLabel="Tous Produits"
+            options={filterOptions.produits}
             multi
             searchable
+            searchPlaceholder="Rechercher un produit..."
+            onMultiChange={(v) => setFilters((f) => ({ ...f, produits: v }))}
           />
           <SelectDropdown
             icon={Tag}
             panelTitle="Source"
             pinnedLabel="Tous Source"
-            options={sourceOptions}
+            options={filterOptions.sources}
+            multi
+            onMultiChange={(v) => setFilters((f) => ({ ...f, sources: v }))}
           />
           <SelectDropdown
-            icon={Package}
-            panelTitle="Produit"
-            pinnedLabel="Tous Produit"
-            options={productNames}
+            icon={User}
+            panelTitle="Assigne a"
+            pinnedLabel="Tous Assigne a"
+            options={filterOptions.agents}
+            multi
             searchable
-            searchPlaceholder="Rechercher un produit..."
+            onMultiChange={(v) => setFilters((f) => ({ ...f, agents: v }))}
+          />
+          <SelectDropdown
+            icon={CheckCircle2}
+            panelTitle="Statut de confirmation"
+            pinnedLabel="Tous Statut de confirmation"
+            options={filterOptions.confirmation}
+            multi
+            onMultiChange={(v) => setFilters((f) => ({ ...f, confirmation: v }))}
           />
           <SelectDropdown
             icon={Truck}
-            panelTitle="Statut livraison personnalise"
-            pinnedLabel="Tous Statut livraison personnalise"
-            options={expeditionStatuses}
-          />
-          <SelectDropdown
-            icon={AlertTriangle}
-            panelTitle="Attention"
-            pinnedLabel="Tous Attention"
-            options={attentionLevels}
-          />
-          <SelectDropdown
-            icon={Clock}
-            panelTitle="Echeance rappel"
-            pinnedLabel="Tous Echeance rappel"
-            options={reminderDueOptions}
+            panelTitle="Statut livraison"
+            pinnedLabel="Tous Statut livraison"
+            options={filterOptions.livraison}
+            multi
+            onMultiChange={(v) => setFilters((f) => ({ ...f, livraison: v }))}
           />
           <SelectDropdown
             icon={Wallet}
-            panelTitle="Tranche montant"
-            pinnedLabel="Tous Tranche montant"
-            options={amountRanges}
-          />
-          <SelectDropdown
-            icon={FileText}
-            panelTitle="Notes"
-            pinnedLabel="Tous Notes"
-            options={notesOptions}
+            panelTitle="Statut paiement"
+            pinnedLabel="Tous Statut paiement"
+            options={filterOptions.paiement}
+            multi
+            onMultiChange={(v) => setFilters((f) => ({ ...f, paiement: v }))}
           />
         </div>
       )}
