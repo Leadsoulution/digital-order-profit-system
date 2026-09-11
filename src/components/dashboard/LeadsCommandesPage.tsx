@@ -70,6 +70,9 @@ import ChangeStatusModal from "./ChangeStatusModal";
 import AssignModal from "./AssignModal";
 import SelectDropdown from "./SelectDropdown";
 
+/** Transporteur integre a l'application. */
+const CARRIER_NAME = "ForceLog";
+
 const statusIcons: Record<LeadStatus, ComponentType<{ className?: string }>> = {
   Nouveau: Sparkles,
   Assigne: UserPlus,
@@ -675,6 +678,7 @@ export default function LeadsCommandesPage() {
                     className="h-4 w-4 rounded border-gray-300"
                   />
                 </th>
+                <th className="px-3 py-3">Date</th>
                 <th className="px-3 py-3">Reference</th>
                 <th className="px-3 py-3">Produits</th>
                 <th className="px-3 py-3">Client</th>
@@ -683,8 +687,7 @@ export default function LeadsCommandesPage() {
                 <th className="px-3 py-3">Assigne a</th>
                 <th className="px-3 py-3">Montant</th>
                 <th className="px-3 py-3">Statut</th>
-                <th className="px-3 py-3">Expedition</th>
-                <th className="px-3 py-3">Date</th>
+                <th className="px-3 py-3">Transporteur</th>
                 <th className="px-3 py-3">Code suivi</th>
                 <th className="px-3 py-3">Statut livraison</th>
                 <th className="px-3 py-3">Statut paiement</th>
@@ -726,6 +729,9 @@ export default function LeadsCommandesPage() {
                       onChange={() => toggleSelect(lead.id)}
                       className="h-4 w-4 rounded border-gray-300"
                     />
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3 font-mono text-gray-500">
+                    {lead.date}
                   </td>
                   <td className="px-3 py-3 font-medium text-gray-800">
                     {lead.reference}
@@ -790,13 +796,15 @@ export default function LeadsCommandesPage() {
                       );
                     })()}
                   </td>
-                  <td className="px-3 py-3">
-                    <span className="rounded-md bg-gray-100 px-2 py-1 text-[12px] font-medium text-gray-500">
-                      {lead.shipping}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-3 font-mono text-gray-500">
-                    {lead.date}
+                  <td className="whitespace-nowrap px-3 py-3">
+                    {lead.trackingNumber ? (
+                      <span className="flex w-fit items-center gap-1 rounded-md bg-orange-50 px-2 py-1 text-[12px] font-medium text-orange-600">
+                        <Truck className="h-3 w-3" />
+                        {CARRIER_NAME}
+                      </span>
+                    ) : (
+                      <span className="text-[12px] text-gray-300">&mdash;</span>
+                    )}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
                     {sendingToForceLog.has(lead.id) ? (
@@ -935,9 +943,14 @@ export default function LeadsCommandesPage() {
               </div>
 
               <div className="mb-2 flex items-center justify-between">
-                <span className="rounded-md bg-gray-100 px-2 py-1 text-[11.5px] font-medium text-gray-500">
-                  {lead.shipping}
-                </span>
+                {lead.trackingNumber ? (
+                  <span className="flex items-center gap-1 rounded-md bg-orange-50 px-2 py-1 text-[11.5px] font-medium text-orange-600">
+                    <Truck className="h-3 w-3" />
+                    {CARRIER_NAME}
+                  </span>
+                ) : (
+                  <span />
+                )}
                 <span className="font-mono text-[16px] font-semibold text-gray-900">
                   {lead.amount}
                 </span>
