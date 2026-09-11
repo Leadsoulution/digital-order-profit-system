@@ -6,6 +6,28 @@ import type { Lead } from "@/components/dashboard/leads-data";
 /** Statut a partir duquel une commande part automatiquement chez ForceLog. */
 export const AUTO_DISPATCH_STATUS = "Confirme";
 
+/** Code ForceLog d'un colis remis au client. */
+const DELIVERED_CODE = "DELIVERED";
+
+/**
+ * Horodatage "AAAA-MM-JJ HH:MM" a l'heure du Maroc, meme format que les
+ * dates renvoyees par ForceLog. Le fuseau est fixe explicitement : le
+ * serveur d'hebergement tourne en UTC et afficherait une heure de moins.
+ */
+export function deliveryTimestamp(now: Date = new Date()): string {
+  const parts = new Intl.DateTimeFormat("fr-FR", {
+    timeZone: "Africa/Casablanca",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(now);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+  return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}`;
+}
+
 /**
  * Envoie une commande chez ForceLog et renvoie les champs de suivi a
  * enregistrer. N'echoue jamais : une erreur ForceLog est retournee dans
@@ -54,8 +76,9 @@ export async function dispatchToForceLog(
  * Recupere les statuts ForceLog des colis recents et renvoie, pour chaque
  * commande suivie, les changements a enregistrer.
  *
- * Regle importante : seuls le statut de livraison et le statut de
- * paiement sont mis a jour. Le statut de confirmation (`status`) reste la
+ * Regle importante : seuls le statut de livraison, le statut de paiement
+ * et la date de livraison sont mis a jour. Le statut de confirmation
+ * (`status`) reste la
  * propriete de l'equipe de confirmation et ne doit JAMAIS etre deduit de
  * l'etat du transporteur — un colis refuse a la livraison reste une
  * commande qui avait bien ete confirmee. Un test verrouille cette regle.
@@ -93,18 +116,28 @@ export async function collectStatusUpdates(
   for (const lead of tracked) {
     const remote = statuses.get(lead.trackingNumber!);
     if (!remote) continue;
+
+    // La date de livraison est posee la premiere fois que le colis est vu
+    // livre, et ne bouge plus ensuite : c'est l'horodatage du passage a
+    // "Livre", ForceLog ne communiquant aucune date de livraison.
+    const stampsDelivery =
+      remote.statusCode === DELIVERED_CODE && !lead.deliveryDate;
+
     // N'ecrit que si quelque chose a reellement change.
     if (
+      !stampsDelivery &&
       remote.status === lead.deliveryStatus &&
       remote.statusCode === lead.deliveryStatusCode &&
       remote.situation === lead.paymentStatus
     ) {
       continue;
     }
+
     updates.set(lead.id, {
       deliveryStatus: remote.status,
       deliveryStatusCode: remote.statusCode,
       paymentStatus: remote.situation,
+      ...(stampsDelivery ? { deliveryDate: deliveryTimestamp() } : {}),
     });
   }
 

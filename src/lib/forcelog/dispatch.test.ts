@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { collectStatusUpdates } from "./dispatch";
+import { collectStatusUpdates, deliveryTimestamp } from "./dispatch";
 import type { Lead } from "@/components/dashboard/leads-data";
 
 const AUTH_OK = { RESULT: "SUCCESS", MESSAGE: "Customer Authenticated" };
@@ -50,18 +50,18 @@ describe("collectStatusUpdates", () => {
       parcelsResponse([
         {
           TRACKING_NUMBER: "F-AAA",
-          STATUS: "Livre",
-          STATUS_CODE: "DELIVERED",
-          SITUATION: "Facture",
+          STATUS: "En cours de livraison",
+          STATUS_CODE: "DISTRIBUTION",
+          SITUATION: "Non Paye",
         },
       ])
     );
 
     const { updates } = await collectStatusUpdates([lead()]);
     expect(updates.get("lead-1")).toEqual({
-      deliveryStatus: "Livre",
-      deliveryStatusCode: "DELIVERED",
-      paymentStatus: "Facture",
+      deliveryStatus: "En cours de livraison",
+      deliveryStatusCode: "DISTRIBUTION",
+      paymentStatus: "Non Paye",
     });
   });
 
@@ -112,9 +112,69 @@ describe("collectStatusUpdates", () => {
         deliveryStatus: "Livre",
         deliveryStatusCode: "DELIVERED",
         paymentStatus: "Facture",
+        deliveryDate: "2026-09-10 11:30",
       }),
     ]);
     expect(updates.size).toBe(0);
+  });
+
+  // ForceLog ne renvoie aucune date de livraison, meme sur un colis livre :
+  // l'application horodate donc elle-meme le passage a "Livre".
+  it("stamps the delivery date the first time a parcel is seen delivered", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      parcelsResponse([
+        {
+          TRACKING_NUMBER: "F-AAA",
+          STATUS: "Livre",
+          STATUS_CODE: "DELIVERED",
+          SITUATION: "En cours de facturation",
+        },
+      ])
+    );
+
+    const { updates } = await collectStatusUpdates([lead()]);
+    expect(updates.get("lead-1")!.deliveryDate).toMatch(
+      /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/
+    );
+  });
+
+  it("never moves a delivery date that is already set", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      parcelsResponse([
+        {
+          TRACKING_NUMBER: "F-AAA",
+          STATUS: "Livre",
+          STATUS_CODE: "DELIVERED",
+          SITUATION: "Facture",
+        },
+      ])
+    );
+
+    const { updates } = await collectStatusUpdates([
+      lead({
+        deliveryStatus: "Livre",
+        deliveryStatusCode: "DELIVERED",
+        paymentStatus: "Non Paye",
+        deliveryDate: "2026-09-10 11:30",
+      }),
+    ]);
+    expect(updates.get("lead-1")).not.toHaveProperty("deliveryDate");
+  });
+
+  it("leaves the delivery date empty while the parcel is not delivered", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      parcelsResponse([
+        {
+          TRACKING_NUMBER: "F-AAA",
+          STATUS: "Expedie vers la ville",
+          STATUS_CODE: "SENT",
+          SITUATION: "Non Paye",
+        },
+      ])
+    );
+
+    const { updates } = await collectStatusUpdates([lead()]);
+    expect(updates.get("lead-1")).not.toHaveProperty("deliveryDate");
   });
 
   it("ignores orders that were never dispatched", async () => {
@@ -124,5 +184,14 @@ describe("collectStatusUpdates", () => {
     expect(checked).toBe(0);
     expect(updates.size).toBe(0);
     expect(fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe("deliveryTimestamp", () => {
+  it("formats a date at Morocco time, not UTC", () => {
+    // 2026-09-11T23:30Z tombe le 12 a 00:30 a Casablanca (UTC+1).
+    expect(deliveryTimestamp(new Date("2026-09-11T23:30:00Z"))).toBe(
+      "2026-09-12 00:30"
+    );
   });
 });

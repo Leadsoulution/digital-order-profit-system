@@ -33,8 +33,6 @@ type LeadRow = {
   delivery_status: string | null;
   delivery_status_code: string | null;
   payment_status: string | null;
-  deliverer: string | null;
-  deliverer_phone: string | null;
   delivery_date: string | null;
   parcel_type: string | null;
   stock_items: string | null;
@@ -64,8 +62,6 @@ function toLead(row: LeadRow): Lead {
     deliveryStatus: row.delivery_status ?? undefined,
     deliveryStatusCode: row.delivery_status_code ?? undefined,
     paymentStatus: row.payment_status ?? undefined,
-    deliverer: row.deliverer ?? undefined,
-    delivererPhone: row.deliverer_phone ?? undefined,
     deliveryDate: row.delivery_date ?? undefined,
     parcelType: (row.parcel_type as Lead["parcelType"]) ?? "simple",
     stockItems: row.stock_items ?? undefined,
@@ -100,11 +96,6 @@ function toRow(lead: Partial<Lead>): Partial<LeadRow> {
     row.delivery_status_code = lead.deliveryStatusCode ?? null;
   if (lead.paymentStatus !== undefined)
     row.payment_status = lead.paymentStatus ?? null;
-  // Une chaine vide vaut effacement : ces trois champs se saisissent a la
-  // main et doivent pouvoir etre vides a nouveau.
-  if (lead.deliverer !== undefined) row.deliverer = lead.deliverer || null;
-  if (lead.delivererPhone !== undefined)
-    row.deliverer_phone = lead.delivererPhone || null;
   if (lead.deliveryDate !== undefined)
     row.delivery_date = lead.deliveryDate || null;
   if (lead.parcelType !== undefined) row.parcel_type = lead.parcelType;
@@ -113,7 +104,7 @@ function toRow(lead: Partial<Lead>): Partial<LeadRow> {
 }
 
 const COLUMNS =
-  "id,reference,product_label,product_name,item_count,client,phone,source,assigned_to,amount,status,shipping,date,ville,tarif,quartier,adresse,tracking_number,tracking_error,delivery_status,delivery_status_code,payment_status,deliverer,deliverer_phone,delivery_date,parcel_type,stock_items";
+  "id,reference,product_label,product_name,item_count,client,phone,source,assigned_to,amount,status,shipping,date,ville,tarif,quartier,adresse,tracking_number,tracking_error,delivery_status,delivery_status_code,payment_status,delivery_date,parcel_type,stock_items";
 
 export async function listLeads(): Promise<Lead[]> {
   const supabase = getSupabaseServerClient();
