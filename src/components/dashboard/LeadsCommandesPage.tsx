@@ -567,7 +567,7 @@ export default function LeadsCommandesPage() {
         des commandes. `filtersResetKey` remonte les pastilles pour vider leur
         selection interne quand on reinitialise depuis ici.
       */}
-      <div className="mb-3 flex items-center gap-2 overflow-x-auto pb-1">
+      <div className="relative z-20 mb-3 flex flex-wrap items-center gap-2">
         <SlidersHorizontal className="h-3.5 w-3.5 shrink-0 text-gray-400" />
         <SelectDropdown
           key={`produits-${filtersResetKey}`}
