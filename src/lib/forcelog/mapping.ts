@@ -14,6 +14,10 @@ export type MappableOrder = {
   adresse?: string;
   amount: string;
   productName: string;
+  /** "stock" preleve la marchandise chez ForceLog, "simple" part de notre depot. */
+  parcelType?: "simple" | "stock";
+  /** References a prelever pour un colis de stock, format "ref:qte,ref:qte". */
+  stockItems?: string;
 };
 
 function parseAmount(amount: string): number | undefined {
@@ -31,7 +35,7 @@ function parseAmount(amount: string): number | undefined {
  *   validating those are present before calling this in production.
  */
 export function mapOrderToParcel(order: MappableOrder): AddParcelParams {
-  return {
+  const params: AddParcelParams = {
     ORDER_NUM: order.reference.slice(0, 20),
     RECEIVER: order.client.slice(0, 50),
     PHONE: order.phone.slice(0, 14),
@@ -40,4 +44,13 @@ export function mapOrderToParcel(order: MappableOrder): AddParcelParams {
     PRODUCT_NATURE: order.productName.slice(0, 100),
     COD: parseAmount(order.amount),
   };
+
+  // Le champ STOCK est ce qui fait d'un colis un colis de stock : ForceLog
+  // preleve alors les references indiquees dans son propre depot. Sans lui,
+  // le colis est simple et part de notre depot.
+  if (order.parcelType === "stock" && order.stockItems) {
+    params.STOCK = order.stockItems;
+  }
+
+  return params;
 }

@@ -65,6 +65,35 @@ export type ForceLogTrackingEvent = {
   TIMESTAMP: number;
 };
 
+/**
+ * Une variante en stock chez ForceLog.
+ * Cles en minuscules, contrairement au reste de l'API : forme verifiee
+ * sur l'endpoint reel, la documentation decrit un format different.
+ */
+export type ForceLogStockVariant = {
+  ref: string;
+  name: string;
+  barcode?: string;
+  quantity: number;
+  waiting_quantity?: number;
+};
+
+export type ForceLogStockProduct = {
+  product_name: string;
+  image?: string;
+  note?: string;
+  has_variants?: number;
+  variants: ForceLogStockVariant[];
+};
+
+export type ForceLogStock = Record<string, ForceLogStockProduct>;
+
+/** Ligne de stock choisie pour un colis de stock. */
+export type StockLine = {
+  ref: string;
+  quantity: number;
+};
+
 export type RelaunchParams = {
   CODE: string;
   RECEIVER: string;

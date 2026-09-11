@@ -18,7 +18,8 @@ export type LeadSource =
   | "nouveau"
   | "Direct"
   | "Landing page"
-  | "Lightfunnels";
+  | "Lightfunnels"
+  | "ForceLog";
 
 export type Lead = {
   id: string;
@@ -46,6 +47,14 @@ export type Lead = {
   deliveryStatusCode?: string;
   /** Statut de paiement remonte par ForceLog (champ SITUATION). */
   paymentStatus?: string;
+  /**
+   * Type d'expedition ForceLog :
+   * - "simple" : marchandise expediee depuis notre depot
+   * - "stock"  : marchandise prelevee dans le depot ForceLog
+   */
+  parcelType?: "simple" | "stock";
+  /** References prelevees pour un colis de stock, format "ref:qte,ref:qte". */
+  stockItems?: string;
 };
 
 export const leads: Lead[] = [
@@ -211,6 +220,7 @@ export const sourceBadgeStyles: Record<LeadSource, string> = {
   Direct: "bg-gray-100 text-gray-600",
   "Landing page": "bg-blue-50 text-blue-600",
   Lightfunnels: "bg-blue-50 text-blue-600",
+  ForceLog: "bg-orange-50 text-orange-600",
 };
 
 /**

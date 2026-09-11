@@ -15,7 +15,15 @@ export const AUTO_DISPATCH_STATUS = "Confirme";
 export async function dispatchToForceLog(
   lead: Pick<
     Lead,
-    "reference" | "client" | "phone" | "ville" | "adresse" | "amount" | "productName"
+    | "reference"
+    | "client"
+    | "phone"
+    | "ville"
+    | "adresse"
+    | "amount"
+    | "productName"
+    | "parcelType"
+    | "stockItems"
   >
 ): Promise<Partial<Lead>> {
   const apiKey = process.env.FORCELOG_API_KEY;

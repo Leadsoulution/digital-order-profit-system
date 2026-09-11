@@ -3,7 +3,9 @@ import {
   type AddParcelParams,
   type ForceLogCities,
   type ForceLogParcel,
+  type ForceLogStock,
   type ForceLogTrackingEvent,
+  type StockLine,
   type RelaunchParams,
   type RelaunchZoneParams,
 } from "./types";
@@ -122,6 +124,26 @@ export async function checkHealth(apiKey: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/**
+ * Produits disponibles dans le depot ForceLog, pour les colis de stock.
+ * Comme `/Cities`, la reponse n'a pas de bloc d'operation : les donnees
+ * sont directement sous la cle `Stock`.
+ */
+export async function getStock(apiKey: string): Promise<ForceLogStock> {
+  const data = await forceLogRequest<{ Stock: ForceLogStock }>(apiKey, {
+    path: "/Stock",
+  });
+  return data.Stock ?? {};
+}
+
+/** Formate des lignes de stock au format attendu par AddParcel : "ref:qte,ref:qte". */
+export function formatStockParam(lines: StockLine[]): string {
+  return lines
+    .filter((line) => line.ref && line.quantity > 0)
+    .map((line) => `${line.ref}:${line.quantity}`)
+    .join(",");
 }
 
 export async function getCities(apiKey: string): Promise<ForceLogCities> {

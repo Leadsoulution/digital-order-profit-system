@@ -3,6 +3,8 @@
 import { useState } from "react";
 import {
   ShoppingCart,
+  Warehouse,
+  Boxes,
   X,
   Phone,
   PhoneCall,
@@ -46,6 +48,15 @@ const products = [
   },
 ];
 
+type StockItem = {
+  ref: string;
+  name: string;
+  productName: string;
+  barcode: string | null;
+  quantity: number;
+  image: string | null;
+};
+
 /** Reference auto si l'utilisateur n'en saisit pas, au format des existantes. */
 function generateReference() {
   const now = new Date();
@@ -81,6 +92,51 @@ export default function CreateCommandeModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [parcelType, setParcelType] = useState<"simple" | "stock">("simple");
+  const [stockItems, setStockItems] = useState<StockItem[]>([]);
+  const [stockLoading, setStockLoading] = useState(false);
+  const [stockError, setStockError] = useState<string | null>(null);
+  const [stockQuantities, setStockQuantities] = useState<Record<string, number>>({});
+
+  // Le stock ForceLog n'est charge qu'a la demande, au moment ou l'on
+  // bascule sur "colis de stock" : inutile d'appeler le transporteur
+  // autrement, et cela evite un effet declenche par un changement d'etat.
+  async function selectStockParcel() {
+    setParcelType("stock");
+    if (stockItems.length > 0 || stockLoading) return;
+
+    setStockLoading(true);
+    setStockError(null);
+    try {
+      const res = await fetch("/api/forcelog/stock");
+      const data = await res.json();
+      if (data.error) setStockError(data.error);
+      else setStockItems(data.items ?? []);
+    } catch {
+      setStockError("Impossible de joindre le serveur.");
+    } finally {
+      setStockLoading(false);
+    }
+  }
+
+  function setStockQuantity(ref: string, quantity: number) {
+    setStockQuantities((prev) => {
+      const next = { ...prev };
+      if (quantity <= 0) delete next[ref];
+      else next[ref] = quantity;
+      return next;
+    });
+  }
+
+  const selectedStock = Object.entries(stockQuantities);
+  const visibleStock = productQuery.trim()
+    ? stockItems.filter(
+        (item) =>
+          item.name.toLowerCase().includes(productQuery.trim().toLowerCase()) ||
+          item.ref.toLowerCase().includes(productQuery.trim().toLowerCase())
+      )
+    : stockItems;
+
   function toggleProduct(id: string) {
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
@@ -104,6 +160,12 @@ export default function CreateCommandeModal({
       setError("Le nom du client et le telephone sont obligatoires.");
       return;
     }
+    if (parcelType === "stock" && selectedStock.length === 0) {
+      setError(
+        "Choisissez au moins une reference et sa quantite dans le stock ForceLog."
+      );
+      return;
+    }
 
     setSaving(true);
     setError(null);
@@ -115,9 +177,28 @@ export default function CreateCommandeModal({
           reference: reference.trim() || generateReference(),
           client: client.trim(),
           phone: phone.trim(),
-          productName: selectedProducts.map((p) => p.name).join(", "),
-          productLabel: selectedProducts[0]?.name.slice(0, 4).toUpperCase() ?? "",
-          itemCount: selectedProducts.length > 1 ? selectedProducts.length : undefined,
+          productName:
+            parcelType === "stock"
+              ? selectedStock
+                  .map(([ref]) => stockItems.find((i) => i.ref === ref)?.name ?? ref)
+                  .join(", ")
+              : selectedProducts.map((p) => p.name).join(", "),
+          productLabel:
+            parcelType === "stock"
+              ? "STOCK"
+              : (selectedProducts[0]?.name.slice(0, 4).toUpperCase() ?? ""),
+          itemCount:
+            parcelType === "stock"
+              ? selectedStock.reduce((sum, [, qty]) => sum + qty, 0) || undefined
+              : selectedProducts.length > 1
+              ? selectedProducts.length
+              : undefined,
+          parcelType,
+          // Format attendu par ForceLog pour prelever dans son depot.
+          stockItems:
+            parcelType === "stock"
+              ? selectedStock.map(([ref, qty]) => `${ref}:${qty}`).join(",")
+              : undefined,
           amount: `${total.replace(/[^\d.]/g, "") || "0"} MAD`,
           ville: ville || undefined,
           adresse: adresse.trim() || undefined,
@@ -335,9 +416,56 @@ export default function CreateCommandeModal({
               PRODUIT
             </p>
 
-            {selected.length === 0 && (
+            <div className="mb-3 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setParcelType("simple")}
+                className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-left ${
+                  parcelType === "simple"
+                    ? "border-gray-900 bg-gray-50"
+                    : "border-gray-200 hover:bg-gray-50"
+                }`}
+              >
+                <Warehouse className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gray-500" />
+                <span className="min-w-0">
+                  <span className="block text-[12.5px] font-medium text-gray-800">
+                    Colis simple
+                  </span>
+                  <span className="block text-[11.5px] text-gray-500">
+                    Marchandise dans mon depot
+                  </span>
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={selectStockParcel}
+                className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-left ${
+                  parcelType === "stock"
+                    ? "border-gray-900 bg-gray-50"
+                    : "border-gray-200 hover:bg-gray-50"
+                }`}
+              >
+                <Boxes className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gray-500" />
+                <span className="min-w-0">
+                  <span className="block text-[12.5px] font-medium text-gray-800">
+                    Colis de stock
+                  </span>
+                  <span className="block text-[11.5px] text-gray-500">
+                    Marchandise chez ForceLog
+                  </span>
+                </span>
+              </button>
+            </div>
+
+            {parcelType === "simple" && selected.length === 0 && (
               <div className="mb-3 rounded-lg border border-dashed border-gray-200 px-3 py-2.5 text-center text-[12.5px] text-gray-400">
                 Aucun produit selectionne
+              </div>
+            )}
+
+            {parcelType === "stock" && selectedStock.length === 0 && (
+              <div className="mb-3 rounded-lg border border-dashed border-gray-200 px-3 py-2.5 text-center text-[12.5px] text-gray-400">
+                Aucune reference selectionnee dans le stock ForceLog
               </div>
             )}
 
@@ -347,11 +475,83 @@ export default function CreateCommandeModal({
                 type="text"
                 value={productQuery}
                 onChange={(e) => setProductQuery(e.target.value)}
-                placeholder="Rechercher des produits"
+                placeholder={
+                  parcelType === "stock"
+                    ? "Rechercher dans le stock ForceLog"
+                    : "Rechercher des produits"
+                }
                 className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-[13px] text-gray-800 placeholder:text-gray-400 focus:border-blue-400 focus:outline-none"
               />
             </div>
 
+            {parcelType === "stock" ? (
+              <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
+                {stockLoading && (
+                  <p className="flex items-center justify-center gap-2 py-4 text-[12.5px] text-gray-400">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Chargement du stock ForceLog...
+                  </p>
+                )}
+                {stockError && (
+                  <p className="flex items-start gap-1.5 rounded-lg bg-red-50 px-3 py-2 text-[12.5px] font-medium text-red-600">
+                    <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    {stockError}
+                  </p>
+                )}
+                {!stockLoading && !stockError && visibleStock.length === 0 && (
+                  <p className="py-4 text-center text-[12.5px] text-gray-400">
+                    Aucune reference disponible.
+                  </p>
+                )}
+                {visibleStock.map((item) => {
+                  const chosen = stockQuantities[item.ref] ?? 0;
+                  return (
+                    <div
+                      key={item.ref}
+                      className={`flex items-center gap-3 rounded-lg border px-3 py-2 ${
+                        chosen > 0 ? "border-gray-900" : "border-gray-200"
+                      }`}
+                    >
+                      <div className="h-9 w-9 shrink-0 overflow-hidden rounded-md bg-gray-100">
+                        {item.image && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={item.image}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[13px] font-medium text-gray-800">
+                          {item.name}
+                        </p>
+                        <p className="truncate font-mono text-[11.5px] text-gray-500">
+                          {item.ref} &middot; {item.quantity} dispo
+                        </p>
+                      </div>
+                      <input
+                        type="number"
+                        min={0}
+                        max={item.quantity}
+                        value={chosen || ""}
+                        placeholder="0"
+                        onChange={(e) =>
+                          setStockQuantity(
+                            item.ref,
+                            Math.min(
+                              Number(e.target.value) || 0,
+                              item.quantity
+                            )
+                          )
+                        }
+                        className="w-16 shrink-0 rounded-md border border-gray-200 px-2 py-1 text-center font-mono text-[12.5px] text-gray-800 focus:border-blue-400 focus:outline-none"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
             <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
               {visibleProducts.map((product) => {
                 const isSelected = selected.includes(product.id);
@@ -390,6 +590,7 @@ export default function CreateCommandeModal({
                 );
               })}
             </div>
+            )}
 
             <div className="mt-3 grid grid-cols-2 gap-3">
               <div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Boxes,
   CheckCircle2,
@@ -11,19 +11,51 @@ import {
   Search,
   SlidersHorizontal,
   TrendingDown,
+  Loader2,
 } from "lucide-react";
 import SelectDropdown from "./SelectDropdown";
 import CreateProductModal from "./CreateProductModal";
 import ProductDetailModal from "./ProductDetailModal";
 import AdjustStockModal from "./AdjustStockModal";
 import {
-  products,
   productMargin,
   isLowStock,
   productStatusOptions,
   productStockOptions,
   type Product,
 } from "./products-data";
+
+/** Produit tel que renvoye par /api/products (stock ForceLog). */
+type StockProduct = {
+  ref: string;
+  name: string;
+  productName: string;
+  barcode?: string;
+  quantity: number;
+  waitingQuantity: number;
+};
+
+/**
+ * Convertit une reference du stock ForceLog vers la forme `Product`
+ * attendue par cette page, pour ne rien changer a son affichage.
+ * ForceLog ne communique pas de prix : les montants restent a zero.
+ */
+function toProduct(item: StockProduct): Product {
+  return {
+    sku: item.ref,
+    name: item.name,
+    supplier: "ForceLog",
+    priceVente: 0,
+    coutFournisseur: 0,
+    stockTotal: item.quantity + item.waitingQuantity,
+    disponible: item.quantity,
+    reserve: 0,
+    enCours: item.waitingQuantity,
+    seuilReappro: 5,
+    dernierMouvement: "",
+    status: "Actif",
+  };
+}
 
 export default function ProductsPage() {
   const [activeTab, setActiveTab] = useState<"catalogue" | "imports">("catalogue");
@@ -33,6 +65,27 @@ export default function ProductsPage() {
   const [detailProduct, setDetailProduct] = useState<Product | null>(null);
   const [stockProduct, setStockProduct] = useState<Product | null>(null);
   const [openMenuSku, setOpenMenuSku] = useState<string | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/products")
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled || data.error) return;
+        setProducts((data.products as StockProduct[]).map(toProduct));
+      })
+      .catch(() => {
+        /* Le catalogue reste vide, l'ecran affiche l'etat "aucun produit". */
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const query = searchQuery.trim().toLowerCase();
   const visibleProducts = query
@@ -214,6 +267,26 @@ export default function ProductsPage() {
                   </tr>
                 </thead>
                 <tbody>
+                  {loading && (
+                    <tr>
+                      <td colSpan={10} className="px-5 py-12 text-center">
+                        <div className="flex flex-col items-center gap-2 text-gray-400">
+                          <Loader2 className="h-6 w-6 animate-spin" />
+                          <p className="text-[13px]">Chargement du catalogue...</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  {!loading && visibleProducts.length === 0 && (
+                    <tr>
+                      <td colSpan={10} className="px-5 py-12 text-center">
+                        <div className="flex flex-col items-center gap-2 text-gray-400">
+                          <Package className="h-6 w-6" />
+                          <p className="text-[13px]">Aucun produit dans le catalogue.</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
                   {visibleProducts.map((product) => {
                     const lowStock = isLowStock(product);
                     return (

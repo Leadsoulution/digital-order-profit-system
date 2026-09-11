@@ -16,6 +16,10 @@ export type Product = {
 };
 
 function margin(price: number, cost: number) {
+  // Un produit sans prix de vente connu (cas du stock ForceLog, qui ne
+  // communique pas de tarif) n'a pas de marge calculable : renvoyer 0
+  // plutot que le NaN d'une division par zero.
+  if (!price) return 0;
   return Math.round(((price - cost) / price) * 100);
 }
 
