@@ -5,10 +5,20 @@ import { Check, ChevronDown, ChevronsUpDown, Search } from "lucide-react";
 import type { ComponentType } from "react";
 
 type BaseProps = {
-  variant?: "filter" | "field";
+  /**
+   * - "filter" : pave large, pour un panneau de filtres deplie
+   * - "field"  : champ de formulaire pleine largeur
+   * - "chip"   : pastille compacte, pour une barre de filtres en ligne
+   */
+  variant?: "filter" | "field" | "chip";
   icon?: ComponentType<{ className?: string }>;
   panelTitle?: string;
   pinnedLabel: string;
+  /**
+   * Intitule de la ligne "tout afficher" en tete de panneau. Par defaut
+   * `pinnedLabel`, mais en pastille celui-ci sert de nom de filtre.
+   */
+  allLabel?: string;
   options: string[];
   searchable?: boolean;
   searchPlaceholder?: string;
@@ -36,6 +46,7 @@ export default function SelectDropdown(props: SelectDropdownProps) {
     icon: Icon,
     panelTitle,
     pinnedLabel,
+    allLabel,
     options,
     multi,
     searchable,
@@ -74,11 +85,16 @@ export default function SelectDropdown(props: SelectDropdownProps) {
     return options.filter((o) => o.toLowerCase().includes(query.toLowerCase()));
   }, [options, query, searchable]);
 
-  const triggerLabel = multi
-    ? multiSelected.length > 0
-      ? `${multiSelected.length} selectionne${multiSelected.length > 1 ? "s" : ""}`
-      : pinnedLabel
-    : (selected ?? pinnedLabel);
+  // En pastille, l'intitule du filtre reste visible et la selection est
+  // resumee par un compteur : la barre garde des largeurs stables.
+  const triggerLabel =
+    multi && variant !== "chip"
+      ? multiSelected.length > 0
+        ? `${multiSelected.length} selectionne${multiSelected.length > 1 ? "s" : ""}`
+        : pinnedLabel
+      : multi
+        ? pinnedLabel
+        : (selected ?? pinnedLabel);
 
   function toggleMultiOption(option: string) {
     // La nouvelle valeur est calculee avant l'appel a setState : prevenir
@@ -97,10 +113,18 @@ export default function SelectDropdown(props: SelectDropdownProps) {
     onMultiChange?.([]);
   }
 
+  const chipActive = variant === "chip" && (multi ? multiSelected.length > 0 : !!selected);
+
   const triggerClasses =
     variant === "field"
       ? "flex w-full items-center justify-between gap-2 rounded-lg border border-gray-200 px-3 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
-      : "flex items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-[12.5px] text-gray-600 hover:bg-gray-50";
+      : variant === "chip"
+        ? `flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-left text-[12.5px] whitespace-nowrap transition-colors ${
+            chipActive
+              ? "border-blue-200 bg-blue-50 font-medium text-blue-700"
+              : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+          }`
+        : "flex items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-[12.5px] text-gray-600 hover:bg-gray-50";
 
   return (
     <div className="relative" ref={ref}>
@@ -110,20 +134,31 @@ export default function SelectDropdown(props: SelectDropdownProps) {
         className={triggerClasses}
       >
         <span className="flex min-w-0 items-center gap-2">
-          {Icon && <Icon className="h-3.5 w-3.5 shrink-0 text-gray-400" />}
+          {Icon && (
+            <Icon
+              className={`h-3.5 w-3.5 shrink-0 ${chipActive ? "text-blue-500" : "text-gray-400"}`}
+            />
+          )}
           <span className="truncate">{triggerLabel}</span>
         </span>
+        {variant === "chip" && multi && multiSelected.length > 0 && (
+          <span className="rounded-full bg-blue-600 px-1.5 text-[10.5px] font-semibold leading-[17px] text-white tabular-nums">
+            {multiSelected.length}
+          </span>
+        )}
         {variant === "field" ? (
           <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-gray-400" />
         ) : (
-          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+          <ChevronDown
+            className={`h-3.5 w-3.5 shrink-0 ${chipActive ? "text-blue-500" : "text-gray-400"}`}
+          />
         )}
       </button>
 
       {open && (
         <div
-          className={`absolute left-0 top-full z-20 mt-1 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg ${
-            variant === "field" ? "w-full" : "w-64"
+          className={`absolute left-0 top-full z-30 mt-1.5 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg ${
+            variant === "field" ? "w-full" : variant === "chip" ? "w-60" : "w-64"
           }`}
         >
           {panelTitle && (
@@ -158,7 +193,7 @@ export default function SelectDropdown(props: SelectDropdownProps) {
                 <Check
                   className={`h-3.5 w-3.5 shrink-0 ${selected === null ? "opacity-100" : "opacity-0"}`}
                 />
-                {pinnedLabel}
+                {allLabel ?? pinnedLabel}
               </button>
             )}
 
@@ -171,7 +206,7 @@ export default function SelectDropdown(props: SelectDropdownProps) {
                     : "text-gray-600 hover:bg-gray-50"
                 }`}
               >
-                {pinnedLabel}
+                {allLabel ?? pinnedLabel}
               </button>
             )}
 

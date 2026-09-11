@@ -101,7 +101,7 @@ export default function LeadsCommandesPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("Tous");
   const [activeRange, setActiveRange] = useState("Tout");
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filtersResetKey, setFiltersResetKey] = useState(0);
   const [filters, setFilters] = useState({
     produits: [] as string[],
     sources: [] as string[],
@@ -215,6 +215,25 @@ export default function LeadsCommandesPage() {
       filters.livraison.includes(lead.deliveryStatus ?? "")) &&
     (filters.paiement.length === 0 ||
       filters.paiement.includes(lead.paymentStatus ?? ""));
+
+  const activeFilterCount = Object.values(filters).reduce(
+    (total, values) => total + values.length,
+    0
+  );
+
+  function resetFilters() {
+    setFilters({
+      produits: [],
+      sources: [],
+      agents: [],
+      confirmation: [],
+      livraison: [],
+      paiement: [],
+    });
+    // Les pastilles gardent leur selection en interne : les remonter est le
+    // seul moyen de les remettre a zero en meme temps que l'etat du parent.
+    setFiltersResetKey((k) => k + 1);
+  }
 
   const query = searchQuery.trim().toLowerCase();
   const visibleLeads = filteredLeads.filter(
@@ -525,14 +544,6 @@ export default function LeadsCommandesPage() {
           />
         </div>
 
-        <button
-          onClick={() => setFiltersOpen((v) => !v)}
-          className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50 lg:w-auto lg:justify-start"
-        >
-          <SlidersHorizontal className="h-3.5 w-3.5" />
-          Filtres
-        </button>
-
         <div className="flex items-center gap-2 overflow-x-auto lg:flex-wrap lg:overflow-visible">
           {dateRanges.map((range) => (
             <button
@@ -551,61 +562,94 @@ export default function LeadsCommandesPage() {
         </div>
       </div>
 
-      {filtersOpen && (
-        <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <SelectDropdown
-            icon={Package}
-            panelTitle="Produits"
-            pinnedLabel="Tous Produits"
-            options={filterOptions.produits}
-            multi
-            searchable
-            searchPlaceholder="Rechercher un produit..."
-            onMultiChange={(v) => setFilters((f) => ({ ...f, produits: v }))}
-          />
-          <SelectDropdown
-            icon={Tag}
-            panelTitle="Source"
-            pinnedLabel="Tous Source"
-            options={filterOptions.sources}
-            multi
-            onMultiChange={(v) => setFilters((f) => ({ ...f, sources: v }))}
-          />
-          <SelectDropdown
-            icon={User}
-            panelTitle="Assigne a"
-            pinnedLabel="Tous Assigne a"
-            options={filterOptions.agents}
-            multi
-            searchable
-            onMultiChange={(v) => setFilters((f) => ({ ...f, agents: v }))}
-          />
-          <SelectDropdown
-            icon={CheckCircle2}
-            panelTitle="Statut de confirmation"
-            pinnedLabel="Tous Statut de confirmation"
-            options={filterOptions.confirmation}
-            multi
-            onMultiChange={(v) => setFilters((f) => ({ ...f, confirmation: v }))}
-          />
-          <SelectDropdown
-            icon={Truck}
-            panelTitle="Statut livraison"
-            pinnedLabel="Tous Statut livraison"
-            options={filterOptions.livraison}
-            multi
-            onMultiChange={(v) => setFilters((f) => ({ ...f, livraison: v }))}
-          />
-          <SelectDropdown
-            icon={Wallet}
-            panelTitle="Statut paiement"
-            pinnedLabel="Tous Statut paiement"
-            options={filterOptions.paiement}
-            multi
-            onMultiChange={(v) => setFilters((f) => ({ ...f, paiement: v }))}
-          />
-        </div>
-      )}
+      {/*
+        Barre de filtres toujours visible, sur une seule ligne juste au-dessus
+        des commandes. `filtersResetKey` remonte les pastilles pour vider leur
+        selection interne quand on reinitialise depuis ici.
+      */}
+      <div className="mb-3 flex items-center gap-2 overflow-x-auto pb-1">
+        <SlidersHorizontal className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+        <SelectDropdown
+          key={`produits-${filtersResetKey}`}
+          variant="chip"
+          icon={Package}
+          panelTitle="Produits"
+          pinnedLabel="Produits"
+          allLabel="Tous les produits"
+          options={filterOptions.produits}
+          multi
+          searchable
+          searchPlaceholder="Rechercher un produit..."
+          onMultiChange={(v) => setFilters((f) => ({ ...f, produits: v }))}
+        />
+        <SelectDropdown
+          key={`sources-${filtersResetKey}`}
+          variant="chip"
+          icon={Tag}
+          panelTitle="Source"
+          pinnedLabel="Source"
+          allLabel="Toutes les sources"
+          options={filterOptions.sources}
+          multi
+          onMultiChange={(v) => setFilters((f) => ({ ...f, sources: v }))}
+        />
+        <SelectDropdown
+          key={`agents-${filtersResetKey}`}
+          variant="chip"
+          icon={User}
+          panelTitle="Assigne a"
+          pinnedLabel="Assigne a"
+          allLabel="Tous les agents"
+          options={filterOptions.agents}
+          multi
+          searchable
+          onMultiChange={(v) => setFilters((f) => ({ ...f, agents: v }))}
+        />
+        <SelectDropdown
+          key={`confirmation-${filtersResetKey}`}
+          variant="chip"
+          icon={CheckCircle2}
+          panelTitle="Statut de confirmation"
+          pinnedLabel="Confirmation"
+          allLabel="Tous les statuts"
+          options={filterOptions.confirmation}
+          multi
+          onMultiChange={(v) => setFilters((f) => ({ ...f, confirmation: v }))}
+        />
+        <SelectDropdown
+          key={`livraison-${filtersResetKey}`}
+          variant="chip"
+          icon={Truck}
+          panelTitle="Statut livraison"
+          pinnedLabel="Livraison"
+          allLabel="Tous les statuts"
+          options={filterOptions.livraison}
+          multi
+          onMultiChange={(v) => setFilters((f) => ({ ...f, livraison: v }))}
+        />
+        <SelectDropdown
+          key={`paiement-${filtersResetKey}`}
+          variant="chip"
+          icon={Wallet}
+          panelTitle="Statut paiement"
+          pinnedLabel="Paiement"
+          allLabel="Tous les statuts"
+          options={filterOptions.paiement}
+          multi
+          onMultiChange={(v) => setFilters((f) => ({ ...f, paiement: v }))}
+        />
+        {activeFilterCount > 0 && (
+          <button
+            onClick={resetFilters}
+            className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1.5 text-[12.5px] font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+          >
+            <X className="h-3.5 w-3.5" />
+            <span>
+              Reinitialiser (<span className="font-mono">{activeFilterCount}</span>)
+            </span>
+          </button>
+        )}
+      </div>
 
       <div className="mb-3 flex items-center justify-between lg:hidden">
         <p className="text-[13px] text-gray-500">
@@ -668,9 +712,12 @@ export default function LeadsCommandesPage() {
                 <p className="text-[14px] font-semibold text-gray-900">
                   Leads &amp; Commandes
                 </p>
+                {/* Les filtres sont maintenant toujours visibles juste
+                    au-dessus : ce compteur doit suivre la liste affichee,
+                    pas le seul onglet actif. */}
                 <p className="text-[12.5px] text-gray-500">
                   <span className="font-mono">
-                    {activeTabDef.count.toLocaleString("fr-FR")}
+                    {visibleLeads.length.toLocaleString("fr-FR")}
                   </span>{" "}
                   resultats
                 </p>
