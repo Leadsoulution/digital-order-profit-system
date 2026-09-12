@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { leads, type Lead } from "./leads-data";
 import type { SessionProfile } from "@/lib/supabase/auth";
+import { useSignOut } from "@/components/auth/useSignOut";
 
 const notifications = [
   {
@@ -89,7 +90,7 @@ export default function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [profile, setProfile] = useState<SessionProfile | null>(null);
-  const [signingOut, setSigningOut] = useState(false);
+  const { signOut, signingOut } = useSignOut();
   const notifRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -110,17 +111,6 @@ export default function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
     };
   }, []);
 
-  async function signOut() {
-    setSigningOut(true);
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-    } finally {
-      // `replace` plutot que `push` : revenir en arriere ne doit pas
-      // ramener sur une page de l'application apres deconnexion.
-      router.replace("/login");
-      router.refresh();
-    }
-  }
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

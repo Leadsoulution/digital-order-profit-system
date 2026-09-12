@@ -15,9 +15,11 @@ import {
   UserCog,
   Settings,
   LogOut,
+  Loader2,
   X,
 } from "lucide-react";
 import type { ComponentType } from "react";
+import { useSignOut } from "@/components/auth/useSignOut";
 
 type NavItem = {
   label: string;
@@ -68,6 +70,7 @@ type SidebarProps = {
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const { signOut, signingOut } = useSignOut();
 
   return (
     <>
@@ -142,10 +145,18 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       </nav>
 
       <div className="border-t border-white/5 px-3 py-3">
-        <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] text-slate-400">
-          <LogOut className="h-[17px] w-[17px]" />
-          <span>Deconnexion</span>
-        </div>
+        <button
+          onClick={signOut}
+          disabled={signingOut}
+          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13px] text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-300 disabled:opacity-60"
+        >
+          {signingOut ? (
+            <Loader2 className="h-[17px] w-[17px] animate-spin" />
+          ) : (
+            <LogOut className="h-[17px] w-[17px]" />
+          )}
+          <span>{signingOut ? "Deconnexion..." : "Deconnexion"}</span>
+        </button>
       </div>
       </aside>
     </>
