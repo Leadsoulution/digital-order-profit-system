@@ -152,4 +152,16 @@ export const teamMembers: TeamMember[] = [
 ];
 
 export const roleOptions = ["Admin", "Agent"];
+
+/** Couleurs d'avatar tirees au sort a la creation d'un compte. */
+export const avatarColors = [
+  "bg-gray-900",
+  "bg-blue-600",
+  "bg-emerald-500",
+  "bg-violet-500",
+  "bg-amber-500",
+  "bg-rose-500",
+  "bg-teal-500",
+  "bg-indigo-500",
+];
 export const statusOptions = ["Actif", "Inactif"];

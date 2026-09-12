@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  AlertCircle,
   Eye,
   FileSpreadsheet,
+  Loader2,
   MoreVertical,
   Pencil,
   Plus,
@@ -16,22 +18,47 @@ import {
   UserCog,
   UserPlus,
   Users,
+  X,
 } from "lucide-react";
 import Sparkline from "./Sparkline";
 import SelectDropdown from "./SelectDropdown";
 import CreateUserModal from "./CreateUserModal";
 import UserDetailModal from "./UserDetailModal";
 import EditUserModal from "./EditUserModal";
-import { teamMembers as initialTeamMembers, roleOptions, statusOptions, type TeamMember } from "./users-data";
+import { roleOptions, statusOptions, type TeamMember } from "./users-data";
 
 export default function UtilisateursPage() {
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(initialTeamMembers);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [detailMember, setDetailMember] = useState<TeamMember | null>(null);
   const [editMember, setEditMember] = useState<TeamMember | null>(null);
+
+  // Les comptes viennent de la base : ce sont ceux qui peuvent reellement
+  // se connecter, pas une liste d'affichage.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/users")
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return;
+        if (data.error) setActionError(data.error);
+        else setTeamMembers(data.users ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setActionError("Impossible de joindre le serveur.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const query = searchQuery.trim().toLowerCase();
   const visibleMembers = query
@@ -45,19 +72,55 @@ export default function UtilisateursPage() {
 
   const totalUsers = teamMembers.length;
   const activeUsers = teamMembers.filter((m) => m.status === "Actif").length;
-  const activePct = Math.round((activeUsers / totalUsers) * 100);
+  const activePct = totalUsers ? Math.round((activeUsers / totalUsers) * 100) : 0;
   const agentsCount = teamMembers.filter((m) => m.role === "Agent").length;
   const adminsCount = teamMembers.filter((m) => m.role === "Admin").length;
   const agentRates = teamMembers
     .filter((m) => m.role === "Agent" && m.tauxConv !== null)
     .map((m) => m.tauxConv as number);
-  const avgConvRate = Math.round(
-    agentRates.reduce((sum, r) => sum + r, 0) / agentRates.length
-  );
+  const avgConvRate = agentRates.length
+    ? Math.round(agentRates.reduce((sum, r) => sum + r, 0) / agentRates.length)
+    : 0;
 
-  function saveMember(updated: TeamMember) {
-    setTeamMembers((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
+  async function saveMember(updated: TeamMember) {
     setEditMember(null);
+    setActionError(null);
+    const previous = teamMembers;
+    setTeamMembers((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
+    try {
+      const res = await fetch(`/api/users/${updated.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updated),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      if (data.user) {
+        setTeamMembers((prev) =>
+          prev.map((m) => (m.id === data.user.id ? data.user : m))
+        );
+      }
+    } catch (error) {
+      setTeamMembers(previous);
+      setActionError(
+        error instanceof Error ? error.message : "Enregistrement impossible."
+      );
+    }
+  }
+
+  async function removeMember(id: string) {
+    setActionError(null);
+    const previous = teamMembers;
+    setTeamMembers((prev) => prev.filter((m) => m.id !== id));
+    try {
+      const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error((await res.json()).error);
+    } catch (error) {
+      setTeamMembers(previous);
+      setActionError(
+        error instanceof Error ? error.message : "Suppression impossible."
+      );
+    }
   }
 
   return (
@@ -85,6 +148,21 @@ export default function UtilisateursPage() {
           Ajouter utilisateur
         </button>
       </div>
+
+      {actionError && (
+        <div className="mb-4 flex items-start justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+            <p className="text-[13px] text-red-700">{actionError}</p>
+          </div>
+          <button
+            onClick={() => setActionError(null)}
+            className="rounded-md p-0.5 text-red-400 hover:text-red-600"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white p-3.5">
@@ -217,6 +295,26 @@ export default function UtilisateursPage() {
               </tr>
             </thead>
             <tbody>
+              {loading && (
+                <tr>
+                  <td colSpan={9} className="px-5 py-12 text-center">
+                    <div className="flex flex-col items-center gap-2 text-gray-400">
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                      <p className="text-[13px]">Chargement des comptes...</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+              {!loading && visibleMembers.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={9}
+                    className="px-5 py-12 text-center text-[13px] text-gray-400"
+                  >
+                    Aucun compte a afficher.
+                  </td>
+                </tr>
+              )}
               {visibleMembers.map((member) => (
                 <tr
                   key={member.id}
@@ -341,9 +439,7 @@ export default function UtilisateursPage() {
                         <div className="mt-1 border-t border-gray-100 pt-1">
                           <button
                             onClick={() => {
-                              setTeamMembers((prev) =>
-                                prev.filter((m) => m.id !== member.id)
-                              );
+                              void removeMember(member.id);
                               setOpenMenuId(null);
                             }}
                             className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-[13px] text-red-600 hover:bg-red-50"
@@ -362,7 +458,15 @@ export default function UtilisateursPage() {
         </div>
       </div>
 
-      {createOpen && <CreateUserModal onClose={() => setCreateOpen(false)} />}
+      {createOpen && (
+        <CreateUserModal
+          onClose={() => setCreateOpen(false)}
+          onCreated={(user) => {
+            setTeamMembers((prev) => [...prev, user]);
+            setCreateOpen(false);
+          }}
+        />
+      )}
       {detailMember && (
         <UserDetailModal
           member={detailMember}

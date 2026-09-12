@@ -70,3 +70,81 @@ body::-webkit-scrollbar {
 .sidebar-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* ---------------------------------------------------------------------
+   Page de connexion
+   Un decor anime et une carte en relief : les transformations 3D sont
+   portees par le CSS, le composant ne fait que fournir l'angle suivi par
+   la souris. Tout est desactive si la personne demande moins d'animation.
+   --------------------------------------------------------------------- */
+
+@keyframes aurora-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(6%, -8%, 0) scale(1.12);
+  }
+  66% {
+    transform: translate3d(-7%, 6%, 0) scale(0.94);
+  }
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: perspective(1400px) translateY(48px) rotateX(14deg) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(1400px) translateY(0) rotateX(0) scale(1);
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes logo-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -7px, 0);
+  }
+}
+
+.auth-aurora {
+  animation: aurora-drift 18s ease-in-out infinite;
+  will-change: transform;
+}
+
+.auth-card {
+  animation: card-enter 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.auth-rise {
+  animation: rise-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.auth-logo-float {
+  animation: logo-float 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-aurora,
+  .auth-card,
+  .auth-rise,
+  .auth-logo-float {
+    animation: none;
+  }
+}

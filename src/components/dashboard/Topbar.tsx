@@ -18,6 +18,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { leads, type Lead } from "./leads-data";
+import type { SessionProfile } from "@/lib/supabase/auth";
 
 const notifications = [
   {
@@ -73,6 +74,13 @@ function SearchResultsPanel({
   );
 }
 
+/** "Mohamed Alaoui" -> "MA" ; une seule initiale si un seul mot. */
+function initials(name?: string) {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
+}
+
 export default function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -80,8 +88,39 @@ export default function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [profile, setProfile] = useState<SessionProfile | null>(null);
+  const [signingOut, setSigningOut] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Qui est connecte : la reponse vient du serveur, le navigateur ne peut
+  // pas se l'inventer.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/auth/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.profile) setProfile(data.profile);
+      })
+      .catch(() => {
+        /* En-tete sans nom plutot qu'un ecran d'erreur. */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function signOut() {
+    setSigningOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      // `replace` plutot que `push` : revenir en arriere ne doit pas
+      // ramener sur une page de l'application apres deconnexion.
+      router.replace("/login");
+      router.refresh();
+    }
+  }
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -227,11 +266,15 @@ export default function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
               onClick={() => setUserMenuOpen((v) => !v)}
               className="flex items-center gap-2 rounded-lg py-1 pl-1 pr-1.5 hover:bg-gray-50"
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-900 text-[12px] font-semibold text-white">
-                MA
+              <span
+                className={`flex h-8 w-8 items-center justify-center rounded-full text-[12px] font-semibold text-white ${
+                  profile?.avatarColor ?? "bg-gray-900"
+                }`}
+              >
+                {initials(profile?.name)}
               </span>
               <span className="hidden text-[13px] font-medium text-gray-700 lg:inline">
-                Mohamed Alaoui
+                {profile?.name ?? "..."}
               </span>
               <ChevronDown className="hidden h-3.5 w-3.5 text-gray-400 lg:block" />
             </button>
@@ -239,10 +282,10 @@ export default function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
               <div className="absolute right-0 top-full z-30 mt-1 w-52 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
                 <div className="border-b border-gray-100 px-3 py-2">
                   <p className="truncate text-[13px] font-medium text-gray-800">
-                    Mohamed Alaoui
+                    {profile?.name ?? "Utilisateur"}
                   </p>
                   <p className="truncate text-[11.5px] text-gray-400">
-                    admin@lead2door.com
+                    {profile?.email ?? ""}
                   </p>
                 </div>
                 <Link
@@ -254,10 +297,14 @@ export default function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
                   Parametres
                 </Link>
                 <div className="mt-1 border-t border-gray-100 pt-1">
-                  <div className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-[13px] text-gray-400">
+                  <button
+                    onClick={signOut}
+                    disabled={signingOut}
+                    className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-[13px] text-red-600 hover:bg-red-50 disabled:opacity-60"
+                  >
                     <LogOut className="h-3.5 w-3.5" />
-                    Deconnexion
-                  </div>
+                    {signingOut ? "Deconnexion..." : "Deconnexion"}
+                  </button>
                 </div>
               </div>
             )}
