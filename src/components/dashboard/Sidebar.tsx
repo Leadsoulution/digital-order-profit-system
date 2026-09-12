@@ -13,6 +13,7 @@ import {
   Users,
   Wallet,
   UserCog,
+  MapPin,
   Settings,
   LogOut,
   Loader2,
@@ -52,6 +53,10 @@ const sections: NavSection[] = [
   {
     title: "OPERATIONS",
     items: [{ label: "Fournisseurs", icon: Users, href: "/fournisseurs" }],
+  },
+  {
+    title: "DONNEES MAITRES",
+    items: [{ label: "Villes de livraison", icon: MapPin, href: "/villes" }],
   },
   {
     title: "GESTION",
