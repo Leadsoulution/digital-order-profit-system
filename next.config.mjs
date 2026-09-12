@@ -12,12 +12,24 @@ const nextConfig = {
         // On force la revalidation des pages a chaque requete. Les assets
         // de `/_next/static` gardent leur cache immuable : leur nom change
         // a chaque build, ils n'ont donc jamais besoin d'etre revalides.
-        source: "/:path((?!_next/static).*)",
+        source: "/:path((?!_next/static|api/).*)",
         headers: [
           {
             key: "Cache-Control",
             value: "public, max-age=0, must-revalidate",
           },
+        ],
+      },
+      {
+        // Les reponses d'API dependent de qui les demande : /api/auth/me
+        // renvoie l'identite de la personne connectee. Les marquer
+        // `public`, meme avec revalidation, autorise un cache partage
+        // comme celui de Hostinger a les conserver, et donc a servir la
+        // fiche d'un utilisateur a un autre. Elles ne doivent jamais
+        // etre stockees.
+        source: "/api/:path*",
+        headers: [
+          { key: "Cache-Control", value: "private, no-store, max-age=0" },
         ],
       },
     ];
