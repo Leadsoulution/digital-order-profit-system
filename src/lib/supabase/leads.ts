@@ -1,4 +1,5 @@
 import { getSupabaseServerClient } from "./server";
+import { cityKey, tariffByCityForm } from "./cities";
 import type { Lead, LeadSource, LeadStatus } from "@/components/dashboard/leads-data";
 
 /**
@@ -118,7 +119,36 @@ export async function listLeads(): Promise<Lead[]> {
     .order("id", { ascending: true });
 
   if (error) throw new Error(error.message);
-  return (data as LeadRow[]).map(toLead);
+
+  const leads = (data as LeadRow[]).map(toLead);
+  return withCityTariffs(leads);
+}
+
+/**
+ * Complete le tarif des commandes qui n'en portent pas, avec celui de
+ * leur ville dans le dictionnaire.
+ *
+ * Seules les commandes sans tarif sont concernees : un tarif deja
+ * enregistre est celui qui a ete facture au client, le remplacer par le
+ * prix du jour reecrirait l'histoire de la commande.
+ */
+async function withCityTariffs(leads: Lead[]): Promise<Lead[]> {
+  if (!leads.some((l) => !l.tarif && l.ville)) return leads;
+
+  let tariffs: Map<string, number>;
+  try {
+    tariffs = await tariffByCityForm();
+  } catch {
+    // Dictionnaire indisponible : afficher les commandes sans tarif vaut
+    // mieux que ne pas les afficher du tout.
+    return leads;
+  }
+
+  return leads.map((lead) => {
+    if (lead.tarif || !lead.ville) return lead;
+    const tariff = tariffs.get(cityKey(lead.ville));
+    return tariff === undefined ? lead : { ...lead, tarif: `${tariff} MAD` };
+  });
 }
 
 /** Retrouve une commande par son numero de suivi ForceLog (pour le webhook). */

@@ -114,6 +114,35 @@ async function countOrdersByKey(
   return counts;
 }
 
+/**
+ * Tarif de livraison par forme de ville rencontree : le nom canonique,
+ * la cle et chaque alias pointent vers le meme prix. Sert a afficher un
+ * tarif sur une commande qui n'en porte pas.
+ *
+ * Les villes desactivees sont exclues : ne plus livrer une ville et
+ * continuer d'en afficher le prix serait trompeur.
+ */
+export async function tariffByCityForm(): Promise<Map<string, number>> {
+  const supabase = getSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("cities")
+    .select("key,name,aliases,tariff")
+    .eq("active", true);
+  if (error) throw new Error(error.message);
+
+  const tariffs = new Map<string, number>();
+  for (const row of (data ?? []) as Pick<
+    CityRow,
+    "key" | "name" | "aliases" | "tariff"
+  >[]) {
+    const tariff = Number(row.tariff);
+    tariffs.set(cityKey(row.name), tariff);
+    tariffs.set(row.key, tariff);
+    for (const alias of row.aliases ?? []) tariffs.set(cityKey(alias), tariff);
+  }
+  return tariffs;
+}
+
 export async function listCities(): Promise<City[]> {
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
