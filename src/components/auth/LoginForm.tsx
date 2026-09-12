@@ -2,14 +2,13 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { AlertCircle, Eye, EyeOff, Loader2, Lock, LogIn, Mail } from "lucide-react";
 
 /** Amplitude du basculement de la carte sous la souris, en degres. */
 const TILT = 7;
 
 export default function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -43,15 +42,20 @@ export default function LoginForm() {
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? "Connexion impossible.");
+        setPending(false);
         return;
       }
-      // `refresh` force le serveur a relire la session avant la navigation,
-      // sinon le proxy renverrait encore vers /login.
-      router.refresh();
-      router.replace(searchParams.get("suite") ?? "/");
+      // Navigation complete plutot que `router.replace` : les cookies de
+      // session viennent d'etre poses par la reponse, et seule une
+      // nouvelle requete au serveur les lui presente. Un changement de
+      // route cote client repartirait du rendu deja en memoire, et le
+      // proxy renverrait encore vers /login.
+      //
+      // `pending` reste vrai jusqu'au chargement de la page suivante :
+      // le bouton ne doit pas redevenir cliquable entre-temps.
+      window.location.assign(searchParams.get("suite") ?? "/");
     } catch {
       setError("Impossible de joindre le serveur.");
-    } finally {
       setPending(false);
     }
   }

@@ -44,6 +44,13 @@ export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
   if (!user && !isPublic(pathname)) {
+    // Une requete d'API attend du JSON : la renvoyer vers une page de
+    // connexion lui ferait recevoir du HTML avec un code 200, que le code
+    // appelant prendrait pour un succes.
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Non connecte." }, { status: 401 });
+    }
+
     const login = new URL("/login", request.url);
     // Memorise la page demandee pour y revenir apres la connexion.
     if (pathname !== "/") login.searchParams.set("suite", `${pathname}${search}`);
